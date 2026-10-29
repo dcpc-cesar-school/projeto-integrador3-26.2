@@ -63,7 +63,7 @@ footer{margin-top:60px;padding-top:20px;border-top:1px solid var(--border);color
 <div class="tbl"><table>
   <tr><th>Data</th><th>Checkpoint</th><th>O que apresentar</th></tr>
   <tr><td><strong>29/10</strong></td><td>Partida</td><td>Equipe formada, repositório criado com professor como colaborador, aplicação escolhida; Prática 1 (<code>monitor.sh</code>) entregue no GitHub e no Drive</td></tr>
-  <tr><td><strong>05/11</strong></td><td>Bases de código</td><td>Etapas 1 e 2: estruturas de dados, ordenação e busca com testes; base de concorrência com race condition demonstrada e corrigida; mapa de técnicas (Etapa 3)</td></tr>
+  <tr><td><strong>05/11</strong></td><td>Bases de código</td><td>Stack definida e justificada no README; Etapas 1 e 2: estruturas de dados, ordenação e busca com testes; base de concorrência com race condition demonstrada e corrigida; mapa de técnicas (Etapa 3)</td></tr>
   <tr><td><strong>12/11</strong></td><td>Arquitetura e CI/CD <em>(semana do Rec'n Play, assíncrono)</em></td><td>Etapa 4: diagrama de arquitetura, Dockerfile, Docker Compose e pipeline de CI rodando (build e testes)</td></tr>
   <tr><td><strong>19/11</strong></td><td>Coletor concorrente</td><td>Coletor com threads e buffer sincronizado coletando os 3 níveis; eventos e alertas de memória registrados</td></tr>
   <tr><td><strong>26/11</strong></td><td>Pré-entrega</td><td>Etapa 5: painel com as telas de hardware/SO, containers e serviços integrado ao coletor</td></tr>
@@ -109,25 +109,20 @@ footer{margin-top:60px;padding-top:20px;border-top:1px solid var(--border);color
   <tr><th>#</th><th>Etapa</th><th>Entrega</th></tr>
   <tr><td>1</td><td>Base de estruturas de dados</td><td>Repositório da equipe com estruturas, ordenação, busca e testes</td></tr>
   <tr><td>2</td><td>Base de concorrência</td><td>Produtor–consumidor e race condition demonstrada e corrigida</td></tr>
-  <tr><td>3</td><td>Aplicação e mapa de técnicas</td><td>Tabela: técnica → onde aplica → por quê → complexidade</td></tr>
+  <tr><td>3</td><td>Aplicação, stack e mapa de técnicas</td><td>Stack escolhida e justificada; tabela: técnica → onde aplica → por quê → complexidade</td></tr>
   <tr><td>4</td><td>Arquitetura e CI/CD</td><td>Diagrama, Dockerfile, Compose e pipeline funcionando</td></tr>
   <tr><td>5</td><td>Painel em 3 níveis</td><td>Hardware/SO, containers e serviços</td></tr>
   <tr><td>6</td><td>Documentação e demonstração</td><td>README e demo ao vivo na AV2 (3/12)</td></tr>
 </table></div>
 
-<h2>Stack de referência</h2>
-<p>Cada equipe escolhe <strong>Java</strong> ou <strong>C / C++</strong> para o backend, o coletor e as estruturas de dados. O foco da avaliação é o backend; a interface pode usar o que for mais simples. As estruturas de dados avaliadas devem ser implementadas pela equipe, sem usar as coleções prontas da linguagem.</p>
-<div class="tbl"><table>
-  <tr><th>Camada</th><th>Opção Java</th><th>Opção C / C++</th></tr>
-  <tr><td>Linguagem / build</td><td>Java 21 + Maven</td><td>C11 ou C++17 + CMake (gcc/g++)</td></tr>
-  <tr><td>Backend / API</td><td>Spring Boot (Web + Actuator)</td><td>cpp-httplib ou Crow (C++); libmicrohttpd (C)</td></tr>
-  <tr><td>Interface</td><td>Thymeleaf + Chart.js ou Vaadin</td><td>Página HTML + Chart.js servida pelo backend</td></tr>
-  <tr><td>Threads e sincronização</td><td><code>Thread</code>, <code>ExecutorService</code>, <code>ReentrantLock</code>, <code>Semaphore</code></td><td><code>std::thread</code>, <code>std::mutex</code>, <code>std::condition_variable</code> ou pthreads</td></tr>
-  <tr><td>Métricas do SO</td><td>Comandos via <code>ProcessBuilder</code></td><td>Comandos via <code>popen()</code> ou leitura direta de <code>/proc</code></td></tr>
-  <tr><td>Testes</td><td>JUnit 5 + JaCoCo</td><td>GoogleTest ou Catch2 (C++); Unity ou CUnit (C)</td></tr>
-  <tr><td>Containers e CI/CD</td><td colspan="2">Docker, Docker Compose, GitHub Actions, GHCR (iguais para as duas opções)</td></tr>
-  <tr><td>Sistema operacional dos labs</td><td colspan="2">Red Hat Linux (RHEL, Rocky, AlmaLinux) ou WSL2</td></tr>
-</table></div>
+<h2>Stack tecnológica</h2>
+<p>A stack é <strong>definida por cada equipe</strong> e registrada no README do repositório, com uma justificativa curta para cada escolha (linguagem, framework do backend, interface, bibliotecas de teste). Ela será apresentada no checkpoint de 05/11. Seja qual for a escolha, ela precisa permitir:</p>
+<ul>
+  <li>implementar as próprias estruturas de dados, ordenação e busca (sem usar as coleções prontas da linguagem nas partes avaliadas);</li>
+  <li>criar threads e usar mecanismos de sincronização;</li>
+  <li>executar comandos do SO ou ler <code>/proc</code> para coletar métricas;</li>
+  <li>rodar em containers Linux e ser testada em um pipeline de CI no GitHub Actions.</li>
+</ul>
 
 <h2>Níveis de entrega</h2>
 <div class="grid">
