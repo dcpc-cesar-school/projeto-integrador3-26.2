@@ -448,8 +448,7 @@ pkill sysbench             <span class="c"># encerra pelo nome</span>
 pkill stress-ng
 pkill -f carga_threads.py  <span class="c"># -f procura na linha de comando inteira</span>
 pgrep -a "sysbench|stress-ng|python3"   <span class="c"># não deve sobrar nada</span></pre></div>
-  <div class="code"><pre><span class="c"># apagar as medições (cuidado: não tem lixeira)</span>
-rm -i medicoes_*.csv alertas.log</pre></div>
+  <div class="note warn"><strong>Não apague os resultados</strong>Os arquivos <code>medicoes_*.csv</code> e <code>alertas.log</code> serão usados na próxima seção (análise com IA) e na entrega. Só encerre as cargas.</div>
 </section>
 
 <!-- IA -->
