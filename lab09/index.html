@@ -93,6 +93,7 @@ footer{margin-top:60px;padding-top:20px;border-top:1px solid var(--border);color
       <li><a href="#s10">Analisar os resultados</a></li>
       <li><a href="#s11">Comparar threads × processos</a></li>
       <li><a href="#s12">Encerrar e limpar</a></li>
+      <li><a href="#ia">Analisar com IA e desfecho</a></li>
       <li><a href="#s13">Salvar no GitHub</a></li>
       <li><a href="#s14">Entregar no Drive</a></li>
       <li><a href="#erros">Erros comuns</a></li>
@@ -451,6 +452,75 @@ pgrep -a "sysbench|stress-ng|python3"   <span class="c"># não deve sobrar nada<
 rm -i medicoes_*.csv alertas.log</pre></div>
 </section>
 
+<!-- IA -->
+<section id="ia">
+  <h2><span class="num">IA</span>Analisar os resultados com IA e fechar o lab</h2>
+  <p>Agora você vai juntar todas as medições em uma planilha de resultados, pedir para uma IA analisar os dados e, no final, escrever o desfecho do laboratório. O resultado vira o <code>relatorio.pdf</code>.</p>
+
+  <h3>Passo 1 — Juntar as medições em uma planilha de resultados</h3>
+  <p>Cada execução do monitor gerou um CSV. O comando abaixo junta todos em um só arquivo e acrescenta uma coluna com o nome do programa:</p>
+  <div class="code"><pre>cd ~/lab09
+{
+  echo "programa,timestamp,pid,cpu,mem,rss_kb,threads,estado"
+  for f in medicoes_*.csv; do
+    p=$(echo "$f" | cut -d_ -f2)          <span class="c"># sysbench, stress-ng, python3…</span>
+    tail -n +2 "$f" | sed "s/^/$p,/"      <span class="c"># pula o cabeçalho e põe o programa na frente</span>
+  done
+} &gt; resultados_lab09.csv
+
+head resultados_lab09.csv
+wc -l resultados_lab09.csv</pre></div>
+  <div class="out"><pre>programa,timestamp,pid,cpu,mem,rss_kb,threads,estado
+stress-ng,19:10:31,5120,1.0,0.3,9000,1,S
+sysbench,19:02:01,4211,398.0,0.1,5120,5,Sl
+...</pre></div>
+  <p>Abra o arquivo no Google Sheets (<strong>Arquivo → Importar → Upload</strong>) ou no LibreOffice Calc (<code>libreoffice --calc resultados_lab09.csv &amp;</code>). Essa é a sua <strong>planilha de resultados</strong>: faça um gráfico de linha de <code>cpu</code> por programa.</p>
+
+  <h3>Passo 2 — Pedir a análise para uma IA</h3>
+  <p>Abra um assistente de IA no navegador (Claude, ChatGPT, Gemini ou outro). Anexe estes três arquivos:</p>
+  <ul>
+    <li><code>resultados_lab09.csv</code> — as medições;</li>
+    <li><code>alertas.log</code> — os alertas disparados;</li>
+    <li><code>ambiente.txt</code> — a máquina onde rodou (seção <a href="#s13">13.8</a>; gere antes se ainda não gerou).</li>
+  </ul>
+  <p>Cole este prompt (ajuste o que estiver entre colchetes):</p>
+  <div class="code"><pre>Você é um analista de desempenho de sistemas Linux. Anexei os resultados de
+um laboratório de monitoramento de processos feito em Red Hat Linux:
+
+- resultados_lab09.csv: medições de CPU (%), memória (%), RSS (KB), número
+  de threads e estado de cada programa, uma linha por amostra.
+  No top, 100% de CPU equivale a 1 núcleo inteiro.
+- alertas.log: alertas de CPU acima do limite configurado.
+- ambiente.txt: dados da máquina (número de núcleos, memória, kernel).
+
+Programas testados: [sysbench com 4 threads, stress-ng com 2 workers de CPU
+e 1 de memória, python3 com 4 threads].
+
+Quero:
+1. Uma tabela por programa com: nº de amostras, CPU média e máxima, RSS
+   médio e máximo (em MB), nº máximo de threads e estados observados.
+2. Os 5 principais insights, sempre com números. Compare threads x processos
+   e relacione a CPU máxima com o número de núcleos da máquina.
+3. Picos, quedas ou comportamentos estranhos, com o horário em que ocorreram.
+4. Um resumo dos alertas: quantos, de qual programa e em que intervalo.
+5. Limitações da medição (o que o script não captura).
+
+Responda em português, de forma objetiva, e mostre como calculou cada número.</pre></div>
+  <div class="note warn"><strong>Confira a IA</strong>A IA pode errar contas ou inventar números. Compare pelo menos <strong>dois valores</strong> da tabela dela (por exemplo, CPU média e máximo de threads) com o <em>Resumo</em> que o próprio <code>monitor.sh</code> imprimiu. Se algo não bater, corrija e anote no relatório.</div>
+  <div class="note"><strong>Vá além</strong>Faça pelo menos uma pergunta de acompanhamento, por exemplo: <em>“Por que o python3 com 4 threads não passou de ~100% de CPU?”</em> ou <em>“Por que o monitor mostrou CPU baixa no stress-ng?”</em></div>
+
+  <h3>Passo 3 — Escrever o desfecho do lab</h3>
+  <p>Monte o <code>relatorio.pdf</code> (até 2 páginas) em um documento (Google Docs ou LibreOffice Writer) com três partes:</p>
+  <div class="tbl"><table>
+    <tr><th>Parte</th><th>Conteúdo</th></tr>
+    <tr><td>1. Números e gráfico</td><td>A tabela por programa (revisada por você) e o gráfico de CPU da planilha.</td></tr>
+    <tr><td>2. Insights</td><td>Os principais insights da IA <em>com a sua revisão</em>: o que você confirmou, o que corrigiu e o que respondeu na pergunta de acompanhamento.</td></tr>
+    <tr><td>3. Desfecho (escrito por você)</td><td>Um ou dois parágrafos, com suas palavras, explicando o que foi feito no lab: o objetivo, os comandos e o script que você criou, os programas monitorados, o que os resultados mostraram sobre processos, threads, CPU e memória, as dificuldades encontradas e como esse monitor será usado no Projeto Integrador.</td></tr>
+  </table></div>
+  <p>Exporte como PDF (<strong>Arquivo → Fazer download → PDF</strong> no Google Docs) e salve em <code>~/lab09/relatorio.pdf</code>.</p>
+  <div class="check"><strong>✓ Checkpoint:</strong> existem <code>resultados_lab09.csv</code> e <code>relatorio.pdf</code> em <code>~/lab09</code>, e o desfecho foi escrito por você — não copiado da IA.</div>
+</section>
+
 <!-- 13 -->
 <section id="s13">
   <h2><span class="num">13</span>Salvar no GitHub</h2>
@@ -492,7 +562,7 @@ git status</pre></div>
   <h3>13.4 Organizar os arquivos do lab no repositório</h3>
   <div class="code"><pre>mkdir -p scripts labs/lab09
 cp ~/lab09/monitor.sh scripts/
-cp ~/lab09/medicoes_*.csv ~/lab09/alertas.log labs/lab09/
+cp ~/lab09/medicoes_*.csv ~/lab09/resultados_lab09.csv ~/lab09/alertas.log ~/lab09/relatorio.pdf labs/lab09/
 ls -lR scripts labs</pre></div>
   <p>Estrutura esperada (ela vai crescer até o fim do projeto):</p>
   <div class="out"><pre>NOME_DO_REPO/
@@ -503,6 +573,7 @@ ls -lR scripts labs</pre></div>
     └── lab09/
         ├── medicoes_sysbench_20261029_190201.csv
         ├── medicoes_stress-ng_20261029_191030.csv
+        ├── resultados_lab09.csv
         ├── alertas.log
         └── relatorio.pdf</pre></div>
 
@@ -567,12 +638,12 @@ exemplo: lab09_equipe3_maria-silva.tar.gz</pre></div>
 
   <h3>14.2 Montar o pacote</h3>
   <div class="code"><pre>cd ~/lab09
-ls     <span class="c"># confira: monitor.sh, medicoes_*.csv, alertas.log, ambiente.txt, relatorio.pdf</span>
+ls     <span class="c"># confira: monitor.sh, medicoes_*.csv, resultados_lab09.csv, alertas.log, ambiente.txt, relatorio.pdf</span>
 
 PACOTE=lab09_equipe3_maria-silva.tar.gz      <span class="c"># ajuste o nome!</span>
-tar -czvf "$PACOTE" monitor.sh medicoes_*.csv alertas.log ambiente.txt relatorio.pdf
+tar -czvf "$PACOTE" monitor.sh medicoes_*.csv resultados_lab09.csv alertas.log ambiente.txt relatorio.pdf
 tar -tzvf "$PACOTE"                          <span class="c"># lista o conteúdo para conferir</span></pre></div>
-  <div class="note"><strong>Prefere .zip?</strong><code>sudo dnf install -y zip</code> e depois <code>zip lab09_equipe3_maria-silva.zip monitor.sh medicoes_*.csv alertas.log ambiente.txt relatorio.pdf</code>.</div>
+  <div class="note"><strong>Prefere .zip?</strong><code>sudo dnf install -y zip</code> e depois <code>zip lab09_equipe3_maria-silva.zip monitor.sh medicoes_*.csv resultados_lab09.csv alertas.log ambiente.txt relatorio.pdf</code>.</div>
 
   <h3>14.3 Levar o arquivo até o navegador</h3>
   <p><strong>Na própria máquina Red Hat:</strong> abra o Firefox, entre no Google Drive e envie o arquivo a partir da pasta <code>~/lab09</code> (no seletor de arquivos: <em>Pasta pessoal → lab09</em>).</p>
@@ -628,7 +699,8 @@ tar -tzvf "$PACOTE"                          <span class="c"># lista o conteúdo
     <tr><td><code>monitor.sh</code></td><td>Script comentado, com as extensões do desafio</td></tr>
     <tr><td><code>medicoes_*.csv</code></td><td>Dados de cada programa monitorado</td></tr>
     <tr><td><code>alertas.log</code></td><td>Eventos registrados</td></tr>
-    <tr><td><code>relatorio.pdf</code></td><td>1 página: o que os dados mostram</td></tr>
+    <tr><td><code>resultados_lab09.csv</code></td><td>Planilha de resultados com todas as medições (seção <a href="#ia">IA</a>)</td></tr>
+    <tr><td><code>relatorio.pdf</code></td><td>Números, insights da IA revisados por você e o desfecho do lab (seção <a href="#ia">IA</a>)</td></tr>
     <tr><td><code>ambiente.txt</code></td><td>Máquina onde os dados foram coletados (seção 13.8)</td></tr>
   </table></div>
   <p><strong>Onde entregar:</strong> no repositório da equipe no GitHub (seção <a href="#s13">13</a>) <em>e</em> como pacote na pasta da turma no Drive (seção <a href="#s14">14</a>).</p>
