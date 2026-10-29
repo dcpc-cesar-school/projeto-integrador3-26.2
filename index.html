@@ -1,0 +1,140 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<title>Projeto Integrador 3 — 2026.2</title>
+<meta name="description" content="Projeto Integrador de Algoritmos e Estrutura de Dados e Infraestrutura de Software — ADS 2026.2, CESAR School.">
+<style>
+:root{--bg:#f7f7f5;--surface:#fff;--text:#1d1d1f;--muted:#5f6368;--border:#e2e2de;--accent:#b3261e;--accent-soft:#fbeceb;--ok:#0b6e4f;--ok-soft:#e3f2ec}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){--bg:#121314;--surface:#1b1c1e;--text:#e8e8e6;--muted:#a0a4a8;--border:#2c2d30;--accent:#ff7a70;--accent-soft:#3a1a18;--ok:#4cc296;--ok-soft:#16302a}}
+:root[data-theme="dark"]{--bg:#121314;--surface:#1b1c1e;--text:#e8e8e6;--muted:#a0a4a8;--border:#2c2d30;--accent:#ff7a70;--accent-soft:#3a1a18;--ok:#4cc296;--ok-soft:#16302a}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--text);font:16px/1.65 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+.wrap{max-width:880px;margin:0 auto;padding:44px 16px 80px}
+.eyebrow{color:var(--accent);font-weight:600;font-size:.85rem;letter-spacing:.06em;text-transform:uppercase}
+h1{margin:.3em 0 .3em;font-size:clamp(1.8rem,4vw,2.4rem);line-height:1.2}
+.lead{color:var(--muted);font-size:1.07rem;margin:0}
+h2{font-size:1.3rem;margin:44px 0 12px}
+h3{font-size:1.02rem;margin:0 0 6px}
+p{margin:.6em 0}
+code{font-family:ui-monospace,"Cascadia Code",Consolas,monospace;font-size:.9em;background:var(--accent-soft);padding:1px 6px;border-radius:5px}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:14px}
+.box{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:16px 18px}
+.box ul{margin:6px 0 0;padding-left:18px}
+.box li{margin:3px 0}
+.tag{display:inline-block;font-size:.75rem;font-weight:600;letter-spacing:.04em;text-transform:uppercase;color:var(--accent);margin-bottom:4px}
+.flow{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin:10px 0}
+.flow span{background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:6px 12px;font-size:.92rem}
+.flow b{color:var(--muted);font-weight:400}
+table{width:100%;border-collapse:collapse;font-size:.92rem;background:var(--surface);border:1px solid var(--border)}
+th,td{text-align:left;padding:9px 12px;border-bottom:1px solid var(--border);vertical-align:top}
+th{background:var(--accent-soft);font-weight:600}
+tr:last-child td{border-bottom:none}
+.tbl{overflow-x:auto;border-radius:8px}
+.btns{display:flex;flex-wrap:wrap;gap:12px;margin-top:24px}
+.btn{display:flex;flex-direction:column;background:var(--accent);color:#fff;text-decoration:none;font-weight:600;padding:12px 18px;border-radius:10px;border:1px solid var(--accent);min-width:220px}
+.btn small{font-weight:500;font-size:.75rem;letter-spacing:.04em;text-transform:uppercase;opacity:.85}
+a.btn:hover{filter:brightness(1.08)}
+.btn.off{background:transparent;color:var(--muted);border:1px dashed var(--border);cursor:default}
+footer{margin-top:60px;padding-top:20px;border-top:1px solid var(--border);color:var(--muted);font-size:.85rem}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header>
+  <div class="eyebrow">ADS 2026.2 · 3º período · CESAR School</div>
+  <h1>Projeto Integrador — AED + Infraestrutura de Software</h1>
+  <p class="lead">Cada equipe pega uma aplicação que já está desenvolvendo em outra disciplina, aplica nela estruturas de dados, ordenação e busca, coloca tudo em containers com um fluxo de DevOps e constrói um módulo de monitoramento com um painel em três níveis: hardware, containers e serviços.</p>
+  <nav class="btns" aria-label="Tutoriais">
+    <a class="btn" href="lab09/"><small>Prática 1 · Aula 09</small>Monitoramento básico de processos</a>
+    <span class="btn off"><small>Prática 2 · em breve</small>Coleta nos 3 níveis</span>
+  </nav>
+</header>
+
+<h2>Sobre o projeto</h2>
+<p>O projeto integra duas disciplinas do 3º período em um único produto. As aplicações variam de equipe para equipe, mas o <strong>módulo de monitoramento é comum a todas</strong>: a aplicação de cada equipe entra como o serviço monitorado. Assim, AED aparece no código real (as estruturas de dados sustentam o coletor e o painel) e Infraestrutura de Software aparece na forma como tudo roda, é entregue e é observado.</p>
+<p>O trabalho é construído aos poucos, uma prática por aula. Cada tutorial gera uma peça que vai para o repositório da equipe no GitHub e é reaproveitada na etapa seguinte, até a demonstração final na AV2.</p>
+
+<h2>Checkpoints (quintas-feiras)</h2>
+<p>Toda quinta-feira a equipe mostra o andamento no repositório do GitHub. Cada checkpoint fecha uma etapa e prepara a seguinte.</p>
+<div class="tbl"><table>
+  <tr><th>Data</th><th>Checkpoint</th><th>O que apresentar</th></tr>
+  <tr><td><strong>29/10</strong></td><td>Partida</td><td>Equipe formada, repositório criado com professor como colaborador, aplicação escolhida; Prática 1 (<code>monitor.sh</code>) entregue no GitHub e no Drive</td></tr>
+  <tr><td><strong>05/11</strong></td><td>Bases de código</td><td>Etapas 1 e 2: estruturas de dados, ordenação e busca com testes; base de concorrência com race condition demonstrada e corrigida; mapa de técnicas (Etapa 3)</td></tr>
+  <tr><td><strong>12/11</strong></td><td>Arquitetura e CI/CD <em>(semana do Rec'n Play, assíncrono)</em></td><td>Etapa 4: diagrama de arquitetura, Dockerfile, Docker Compose e pipeline de CI rodando (build e testes)</td></tr>
+  <tr><td><strong>19/11</strong></td><td>Coletor concorrente</td><td>Coletor com threads e buffer sincronizado coletando os 3 níveis; eventos e alertas de memória registrados</td></tr>
+  <tr><td><strong>26/11</strong></td><td>Pré-entrega</td><td>Etapa 5: painel com as telas de hardware/SO, containers e serviços integrado ao coletor</td></tr>
+  <tr><td><strong>03/12</strong></td><td>Entrega final (AV2)</td><td>Etapa 6: documentação e demonstração ao vivo — deploy pelo pipeline, carga, alertas e visão de arquitetura</td></tr>
+</table></div>
+
+<h2>As duas disciplinas no projeto</h2>
+<div class="grid">
+  <div class="box">
+    <div class="tag">AED</div>
+    <h3>Estruturas de dados, ordenação e busca</h3>
+    <ul>
+      <li>Base própria de estruturas: lista, pilha, fila, fila circular, hash e árvore binária de busca</li>
+      <li>Ordenação (insertion, selection, merge, quick) e busca (sequencial e binária)</li>
+      <li>Aplicação no código da equipe e no monitor</li>
+      <li>Análise de complexidade e testes</li>
+    </ul>
+  </div>
+  <div class="box">
+    <div class="tag">Infraestrutura de Software</div>
+    <h3>Containers, DevOps e monitoramento</h3>
+    <ul>
+      <li>Containers (Docker/Compose; Kubernetes como bônus)</li>
+      <li>Fluxo de CI/CD com GitHub Actions</li>
+      <li>Threads e concorrência: evitar race condition</li>
+      <li>Memória: evitar o OOM Killer e registrar eventos</li>
+      <li>Métricas coletadas com comandos do SO</li>
+    </ul>
+  </div>
+</div>
+
+<h2>Arquitetura</h2>
+<p>Containers que sobem juntos com Docker Compose:</p>
+<div class="flow"><span>App da equipe</span><b>→ monitorada por →</b><span>Coletor (threads)</span><b>→</b><span>Eventos</span><b>→</b><span>Painel</span></div>
+<div class="grid">
+  <div class="box"><div class="tag">Nível 1</div><h3>Hardware / SO</h3>CPU por núcleo, memória, disco, processos e threads.</div>
+  <div class="box"><div class="tag">Nível 2</div><h3>Containers</h3>Status, CPU, memória (uso e limite), reinícios e OOMKilled.</div>
+  <div class="box"><div class="tag">Nível 3</div><h3>Serviços</h3>Health check, tempo de resposta, tempo no ar e linha do tempo de eventos.</div>
+</div>
+
+<h2>Etapas</h2>
+<div class="tbl"><table>
+  <tr><th>#</th><th>Etapa</th><th>Entrega</th></tr>
+  <tr><td>1</td><td>Base de estruturas de dados</td><td>Repositório da equipe com estruturas, ordenação, busca e testes</td></tr>
+  <tr><td>2</td><td>Base de concorrência</td><td>Produtor–consumidor e race condition demonstrada e corrigida</td></tr>
+  <tr><td>3</td><td>Aplicação e mapa de técnicas</td><td>Tabela: técnica → onde aplica → por quê → complexidade</td></tr>
+  <tr><td>4</td><td>Arquitetura e CI/CD</td><td>Diagrama, Dockerfile, Compose e pipeline funcionando</td></tr>
+  <tr><td>5</td><td>Painel em 3 níveis</td><td>Hardware/SO, containers e serviços</td></tr>
+  <tr><td>6</td><td>Documentação e demonstração</td><td>README e demo ao vivo na AV2 (3/12)</td></tr>
+</table></div>
+
+<h2>Stack de referência</h2>
+<div class="tbl"><table>
+  <tr><th>Camada</th><th>Escolha</th></tr>
+  <tr><td>Linguagem / build</td><td>Java 21 + Maven</td></tr>
+  <tr><td>Backend / API</td><td>Spring Boot (Web + Actuator)</td></tr>
+  <tr><td>Interface</td><td>Thymeleaf + Chart.js ou Vaadin</td></tr>
+  <tr><td>Métricas</td><td>Comandos do SO via <code>ProcessBuilder</code></td></tr>
+  <tr><td>Testes</td><td>JUnit 5 + JaCoCo</td></tr>
+  <tr><td>Containers e CI/CD</td><td>Docker, Docker Compose, GitHub Actions, GHCR</td></tr>
+  <tr><td>Sistema operacional dos labs</td><td>Red Hat Linux (RHEL, Rocky, AlmaLinux) ou WSL2</td></tr>
+</table></div>
+
+<h2>Níveis de entrega</h2>
+<div class="grid">
+  <div class="box"><div class="tag">Mínimo</div>App em container; Compose com monitor e painel; tela de hardware/SO; fila circular própria.</div>
+  <div class="box"><div class="tag">Esperado</div>3 telas; threads sincronizadas; alertas de memória e eventos; CI com build e testes; ordenação e busca com análise.</div>
+  <div class="box"><div class="tag">Bônus</div>CD para nuvem; Kubernetes; demo ao vivo de OOM e race condition; benchmark entre algoritmos.</div>
+</div>
+
+<footer>Algoritmos e Estrutura de Dados · Infraestrutura de Software · ADS 2026.2 · CESAR School</footer>
+</div>
+</body>
+</html>
