@@ -1,0 +1,688 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<title>Lab 09 — monitor.sh</title>
+<meta name="description" content="Passo a passo detalhado para criar e executar um script de monitoramento de processos em Red Hat Linux — Infraestrutura de Software, CESAR School.">
+<style>
+:root{
+  --bg:#f7f7f5; --surface:#ffffff; --text:#1d1d1f; --muted:#5f6368; --border:#e2e2de;
+  --accent:#b3261e; --accent-soft:#fbeceb; --code-bg:#1e1f22; --code-text:#e6e6e6;
+  --warn:#8a5a00; --warn-soft:#fff4dc; --ok:#0b6e4f; --ok-soft:#e3f2ec; --c-com:#8b98a5;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#121314; --surface:#1b1c1e; --text:#e8e8e6; --muted:#a0a4a8; --border:#2c2d30;
+    --accent:#ff7a70; --accent-soft:#3a1a18; --code-bg:#0d0e0f; --warn:#f0c060; --warn-soft:#2e2611; --ok:#4cc296; --ok-soft:#16302a;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#121314; --surface:#1b1c1e; --text:#e8e8e6; --muted:#a0a4a8; --border:#2c2d30;
+  --accent:#ff7a70; --accent-soft:#3a1a18; --code-bg:#0d0e0f; --warn:#f0c060; --warn-soft:#2e2611; --ok:#4cc296; --ok-soft:#16302a;
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{margin:0;background:var(--bg);color:var(--text);font:16px/1.65 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+.wrap{max-width:880px;margin:0 auto;padding:40px 16px 80px}
+header{border-bottom:1px solid var(--border);padding-bottom:24px;margin-bottom:28px}
+.eyebrow{color:var(--accent);font-weight:600;font-size:.85rem;letter-spacing:.06em;text-transform:uppercase}
+h1{font-size:clamp(1.8rem,4vw,2.4rem);line-height:1.2;margin:.3em 0 .4em}
+.lead{color:var(--muted);font-size:1.05rem;margin:0}
+.toc{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:14px 18px;margin-top:22px}
+.toc strong{font-size:.85rem;color:var(--muted);text-transform:uppercase;letter-spacing:.05em}
+.toc ol{margin:8px 0 0;padding-left:22px;columns:2;column-gap:28px}
+.toc li{break-inside:avoid;font-size:.93rem}
+.toc a{color:var(--text);text-decoration:none}
+.toc a:hover{color:var(--accent)}
+@media (max-width:600px){.toc ol{columns:1}}
+section{margin:48px 0;scroll-margin-top:16px}
+h2{font-size:1.35rem;margin:0 0 12px;display:flex;align-items:center;gap:12px}
+.num{flex:none;min-width:34px;height:34px;padding:0 6px;border-radius:17px;background:var(--accent);color:#fff;display:grid;place-items:center;font-size:.9rem}
+h3{font-size:1.05rem;margin:26px 0 8px}
+p{margin:.6em 0}
+code{font-family:ui-monospace,"Cascadia Code",Consolas,monospace;font-size:.9em}
+:not(pre)>code{background:var(--accent-soft);padding:1px 6px;border-radius:5px;overflow-wrap:anywhere}
+.code{position:relative;margin:12px 0}
+pre{background:var(--code-bg);color:var(--code-text);padding:16px;padding-right:76px;border-radius:10px;overflow-x:auto;margin:0;font-size:.86rem;line-height:1.55}
+pre .c{color:var(--c-com)}
+.copy{position:absolute;top:8px;right:8px;font:600 .75rem system-ui,sans-serif;background:#ffffff1a;color:#e6e6e6;border:1px solid #ffffff33;border-radius:6px;padding:4px 10px;cursor:pointer}
+.copy:hover{background:#ffffff33}
+.out pre{background:var(--surface);color:var(--text);border:1px dashed var(--border)}
+.out::before{content:"saída esperada";display:block;font-size:.72rem;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);margin-bottom:4px}
+.note{border-left:4px solid var(--ok);background:var(--ok-soft);padding:12px 16px;border-radius:0 8px 8px 0;margin:14px 0}
+.warn{border-left-color:var(--warn);background:var(--warn-soft)}
+.note strong{display:block;margin-bottom:2px}
+.check{border:1px solid var(--border);background:var(--surface);border-radius:10px;padding:12px 16px;margin:16px 0}
+.check strong{color:var(--ok)}
+table{width:100%;border-collapse:collapse;margin:12px 0;font-size:.9rem;background:var(--surface);border:1px solid var(--border)}
+th,td{text-align:left;padding:9px 12px;border-bottom:1px solid var(--border);vertical-align:top}
+th{background:var(--accent-soft);font-weight:600}
+tr:last-child td{border-bottom:none}
+.tbl{overflow-x:auto;border-radius:8px}
+ol.steps{padding-left:22px}
+ol.steps li{margin:8px 0}
+.dl{display:inline-block;margin-top:8px;background:var(--accent);color:#fff;text-decoration:none;font-weight:600;padding:8px 16px;border-radius:8px}
+.dl:hover{opacity:.9}
+kbd{font-family:ui-monospace,Consolas,monospace;font-size:.82em;border:1px solid var(--border);border-bottom-width:2px;background:var(--surface);border-radius:4px;padding:0 5px}
+footer{margin-top:60px;padding-top:20px;border-top:1px solid var(--border);color:var(--muted);font-size:.85rem}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header>
+  <p style="margin:0 0 14px"><a href="../" style="color:var(--muted);text-decoration:none;font-size:.9rem">← Projeto Integrador</a></p>
+  <div class="eyebrow">Prática 1 · Aula 09 · Red Hat Linux</div>
+  <h1>Criando e executando o <code>monitor.sh</code></h1>
+  <p class="lead">Passo a passo completo para escrever, entender e colocar para rodar um script em Bash que mede CPU, memória e threads de um processo, grava as medições em CSV, gera alertas e calcula um resumo. Esta é a primeira versão do monitor do Projeto Integrador.</p>
+  <div class="toc">
+    <strong>Roteiro</strong>
+    <ol>
+      <li><a href="#s0">Antes de começar</a></li>
+      <li><a href="#s1">Preparar o ambiente</a></li>
+      <li><a href="#s2">Instalar os pacotes</a></li>
+      <li><a href="#s3">Conhecer os comandos</a></li>
+      <li><a href="#s4">Criar a pasta do lab</a></li>
+      <li><a href="#s5">Escrever o script</a></li>
+      <li><a href="#s6">Entender linha a linha</a></li>
+      <li><a href="#s7">Dar permissão e testar</a></li>
+      <li><a href="#s8">Subir uma carga</a></li>
+      <li><a href="#s9">Executar o monitor</a></li>
+      <li><a href="#s10">Analisar os resultados</a></li>
+      <li><a href="#s11">Comparar threads × processos</a></li>
+      <li><a href="#s12">Encerrar e limpar</a></li>
+      <li><a href="#s13">Salvar no GitHub</a></li>
+      <li><a href="#s14">Entregar no Drive</a></li>
+      <li><a href="#erros">Erros comuns</a></li>
+      <li><a href="#desafio">Desafio e entrega</a></li>
+      <li><a href="#cola">Cola rápida</a></li>
+    </ol>
+  </div>
+</header>
+
+<!-- 0 -->
+<section id="s0">
+  <h2><span class="num">0</span>Antes de começar</h2>
+  <p><strong>O que você vai construir:</strong> um script que recebe o nome ou o PID de um processo e, a cada intervalo, registra:</p>
+  <div class="tbl"><table>
+    <tr><th>Coluna do CSV</th><th>Significado</th><th>De onde vem</th></tr>
+    <tr><td><code>timestamp</code></td><td>Hora da medição</td><td><code>date +%T</code></td></tr>
+    <tr><td><code>pid</code></td><td>Identificador do processo</td><td><code>pgrep</code> ou argumento</td></tr>
+    <tr><td><code>cpu</code></td><td>% de CPU no último intervalo (100% = 1 núcleo)</td><td><code>top</code></td></tr>
+    <tr><td><code>mem</code></td><td>% da memória física</td><td><code>top</code></td></tr>
+    <tr><td><code>rss_kb</code></td><td>Memória física residente, em KB</td><td><code>ps</code></td></tr>
+    <tr><td><code>threads</code></td><td>Número de threads do processo</td><td><code>ps</code> (campo <code>nlwp</code>)</td></tr>
+    <tr><td><code>estado</code></td><td>R executando, S dormindo, D esperando E/S, Z zumbi…</td><td><code>ps</code> (campo <code>stat</code>)</td></tr>
+  </table></div>
+  <p><strong>Pré-requisitos:</strong> terminal Linux da família Red Hat (RHEL 8/9, Rocky Linux, AlmaLinux, CentOS Stream ou Fedora) e um usuário com permissão de <code>sudo</code>.</p>
+  <div class="note"><strong>Convenção desta página</strong>Linhas que começam com <code>#</code> dentro dos blocos são comentários — não precisam ser digitadas. Blocos com fundo claro e borda tracejada mostram a <em>saída esperada</em>.</div>
+</section>
+
+<!-- 1 -->
+<section id="s1">
+  <h2><span class="num">1</span>Preparar o ambiente</h2>
+
+  <h3>1.1 Se você está no Windows: WSL2 com uma distro compatível com Red Hat</h3>
+  <p>Abra o <strong>PowerShell como administrador</strong> e liste as distribuições disponíveis:</p>
+  <div class="code"><pre>wsl --list --online</pre></div>
+  <p>Escolha uma da família Red Hat (por exemplo <strong>AlmaLinux</strong> ou <strong>Oracle Linux</strong>) e instale usando o nome exatamente como apareceu na lista:</p>
+  <div class="code"><pre><span class="c"># exemplo — use o nome que apareceu na sua lista</span>
+wsl --install -d AlmaLinux-9</pre></div>
+  <p>Reinicie se for pedido, abra a distro pelo menu Iniciar e crie seu usuário e senha.</p>
+
+  <h3>1.2 Se você está numa VM ou servidor Red Hat</h3>
+  <p>Basta abrir o terminal (ou conectar via <code>ssh usuario@ip</code>).</p>
+
+  <h3>1.3 Confirmar a distribuição e a máquina</h3>
+  <div class="code"><pre>cat /etc/redhat-release     <span class="c"># qual distro e versão</span>
+uname -r                     <span class="c"># versão do kernel</span>
+nproc                        <span class="c"># quantos núcleos de CPU</span>
+free -h                      <span class="c"># memória total e disponível</span>
+whoami                       <span class="c"># seu usuário</span></pre></div>
+  <div class="out"><pre>AlmaLinux release 9.4 (Seafoam Ocelot)
+5.15.153.1-microsoft-standard-WSL2
+4
+               total        used        free      shared  buff/cache   available
+Mem:           7.7Gi       1.1Gi       5.9Gi       3.0Mi       0.9Gi       6.4Gi
+aluno</pre></div>
+  <div class="check"><strong>✓ Checkpoint:</strong> anote o número de núcleos (<code>nproc</code>). Você vai precisar dele para interpretar o %CPU.</div>
+</section>
+
+<!-- 2 -->
+<section id="s2">
+  <h2><span class="num">2</span>Instalar os pacotes</h2>
+
+  <h3>2.1 Ferramentas básicas (repositórios padrão)</h3>
+  <p><code>procps-ng</code> traz <code>top</code>, <code>ps</code>, <code>pgrep</code>, <code>free</code> e <code>vmstat</code>. <code>psmisc</code> traz <code>pstree</code>. <code>stress-ng</code> gera carga.</p>
+  <div class="code"><pre>sudo dnf install -y procps-ng psmisc nano util-linux stress-ng</pre></div>
+
+  <h3>2.2 Habilitar o EPEL (necessário para o <code>sysbench</code>)</h3>
+  <p>O <code>sysbench</code> fica no repositório extra <strong>EPEL</strong>. O comando muda conforme a distribuição:</p>
+  <div class="code"><pre><span class="c"># Rocky Linux / AlmaLinux / CentOS Stream / Oracle Linux</span>
+sudo dnf install -y epel-release</pre></div>
+  <div class="code"><pre><span class="c"># RHEL 9 com assinatura (Red Hat oficial)</span>
+sudo subscription-manager repos --enable codeready-builder-for-rhel-9-$(arch)-rpms
+sudo dnf install -y https://dl.fedoraproject.org/pub/epel/epel-release-latest-9.noarch.rpm
+
+<span class="c"># RHEL 8: troque 9 por 8 nas duas linhas acima</span></pre></div>
+  <div class="code"><pre><span class="c"># Fedora: não precisa de EPEL, o sysbench já está nos repositórios</span></pre></div>
+
+  <h3>2.3 Instalar o sysbench</h3>
+  <div class="code"><pre>sudo dnf install -y sysbench</pre></div>
+
+  <h3>2.4 Conferir as instalações</h3>
+  <div class="code"><pre>top -v | head -1
+sysbench --version
+stress-ng --version</pre></div>
+  <div class="out"><pre>  procps-ng 3.3.17
+sysbench 1.0.20
+stress-ng, version 0.17.x</pre></div>
+  <div class="note warn"><strong>Sem internet ou sem EPEL?</strong>Dá para fazer o lab só com o <code>stress-ng</code> (que vem dos repositórios padrão) e com o programa Python de threads mostrado na seção 11.</div>
+</section>
+
+<!-- 3 -->
+<section id="s3">
+  <h2><span class="num">3</span>Conhecer os comandos que o script usa</h2>
+  <p>Antes de automatizar, rode cada comando à mão para entender a saída. Use o seu próprio shell como alvo — o PID dele está na variável <code>$$</code>.</p>
+
+  <h3>3.1 <code>pgrep</code> — achar o PID pelo nome</h3>
+  <div class="code"><pre>pgrep -a bash       <span class="c"># lista PID + comando de todos os "bash"</span>
+pgrep -o bash       <span class="c"># só o mais antigo (-o = oldest)</span>
+echo $$             <span class="c"># PID do seu shell atual</span></pre></div>
+
+  <h3>3.2 <code>top</code> em modo batch — %CPU e %MEM</h3>
+  <div class="code"><pre>top -b -n 1 -p $$</pre></div>
+  <div class="out"><pre>top - 19:10:02 up  1:02,  1 user,  load average: 0.00, 0.01, 0.00
+Tasks:   1 total,   0 running,   1 sleeping,   0 stopped,   0 zombie
+%Cpu(s):  0.3 us,  0.2 sy,  0.0 ni, 99.5 id,  0.0 wa,  0.0 hi,  0.0 si,  0.0 st
+MiB Mem :   7843.2 total,   6012.4 free,   1101.7 used,    729.1 buff/cache
+MiB Swap:   2048.0 total,   2048.0 free,      0.0 used.   6489.3 avail Mem
+
+    PID USER      PR  NI    VIRT    RES    SHR S  %CPU  %MEM     TIME+ COMMAND
+   1234 aluno     20   0  224108   5340   3412 S   0.0   0.1   0:00.03 bash</pre></div>
+  <p>As opções: <code>-b</code> = texto puro (sem tela interativa), <code>-n 1</code> = uma atualização, <code>-p</code> = só esse PID. A <strong>última linha</strong> é a do processo; a coluna 9 é <code>%CPU</code> e a 10 é <code>%MEM</code>. Extraia as duas:</p>
+  <div class="code"><pre>top -b -n 1 -p $$ | tail -1 | awk '{print $9, $10}'</pre></div>
+  <div class="out"><pre>0.0 0.1</pre></div>
+
+  <h3>3.3 <code>ps</code> — RSS, threads e estado</h3>
+  <div class="code"><pre>ps -p $$ -o pid,comm,rss,nlwp,stat     <span class="c"># com cabeçalho</span>
+ps -p $$ -o rss=,nlwp=,stat=           <span class="c"># o "=" remove o cabeçalho</span></pre></div>
+  <div class="out"><pre>    PID COMMAND           RSS NLWP STAT
+   1234 bash             5340    1 Ss
+ 5340    1 Ss</pre></div>
+  <p><code>rss</code> = memória física em KB · <code>nlwp</code> = <em>number of light-weight processes</em>, ou seja, nº de threads · <code>stat</code> = estado.</p>
+
+  <h3>3.4 <code>kill -0</code> — o processo ainda existe?</h3>
+  <div class="code"><pre>kill -0 $$ &amp;&amp; echo "existe"
+kill -0 999999 2&gt;/dev/null || echo "nao existe"</pre></div>
+  <p>O sinal 0 não faz nada com o processo: só testa se ele existe e se você tem permissão sobre ele.</p>
+
+  <h3>3.5 <code>awk</code> — comparar números com casas decimais</h3>
+  <p>O Bash só compara inteiros; por isso usamos o <code>awk</code> para saber se <code>12.5 &gt; 10</code>:</p>
+  <div class="code"><pre>awk -v c=12.5 -v l=10 'BEGIN{exit !(c&gt;l)}' &amp;&amp; echo "passou do limite"</pre></div>
+
+  <div class="check"><strong>✓ Checkpoint:</strong> você consegue obter, para o PID do seu shell, os valores de %CPU, %MEM, RSS, threads e estado com um comando cada.</div>
+</section>
+
+<!-- 4 -->
+<section id="s4">
+  <h2><span class="num">4</span>Criar a pasta do lab</h2>
+  <div class="code"><pre>mkdir -p ~/lab09
+cd ~/lab09
+pwd                 <span class="c"># deve mostrar /home/SEU_USUARIO/lab09</span></pre></div>
+  <div class="note"><strong>Projeto Integrador</strong>Ao final, tudo vai para o repositório da equipe no GitHub (seção <a href="#s13">13</a>). Se o repositório já está clonado, você pode trabalhar direto em <code>&lt;repo&gt;/scripts/</code> em vez de <code>~/lab09</code>.</div>
+</section>
+
+<!-- 5 -->
+<section id="s5">
+  <h2><span class="num">5</span>Escrever o script</h2>
+
+  <h3>5.1 Abrir o editor</h3>
+  <p><strong>Opção A — nano</strong> (mais simples):</p>
+  <div class="code"><pre>nano monitor.sh</pre></div>
+  <p>Cole o código (no terminal: <kbd>Ctrl</kbd>+<kbd>Shift</kbd>+<kbd>V</kbd> ou botão direito). Salve com <kbd>Ctrl</kbd>+<kbd>O</kbd> → <kbd>Enter</kbd> e saia com <kbd>Ctrl</kbd>+<kbd>X</kbd>.</p>
+  <p><strong>Opção B — vi/vim</strong> (vem em toda instalação Red Hat):</p>
+  <div class="code"><pre>vi monitor.sh</pre></div>
+  <p>Pressione <kbd>i</kbd> para entrar no modo de inserção, cole o código, pressione <kbd>Esc</kbd> e digite <code>:wq</code> + <kbd>Enter</kbd> para salvar e sair. Para sair <em>sem</em> salvar: <kbd>Esc</kbd> e <code>:q!</code>.</p>
+  <div class="note warn"><strong>Colando no vi?</strong>Se a indentação ficar “em escada”, antes de pressionar <kbd>i</kbd> digite <code>:set paste</code> + <kbd>Enter</kbd>.</div>
+
+  <h3>5.2 O código</h3>
+  <div class="code"><pre>#!/usr/bin/env bash
+<span class="c"># monitor.sh - mede CPU, memoria e threads de um processo e salva em CSV</span>
+<span class="c"># Uso: ./monitor.sh &lt;PID|nome&gt; [intervalo_s] [amostras] [limite_cpu]</span>
+export LC_ALL=C                      <span class="c"># ponto decimal (evita "12,5" no CSV)</span>
+ALVO=$1; INTERVALO=${2:-1}; AMOSTRAS=${3:-30}; LIMITE=${4:-80}
+[ -z "$ALVO" ] &amp;&amp; { echo "Uso: $0 &lt;PID|nome&gt; [intervalo] [amostras] [limite]"; exit 1; }
+
+<span class="c"># 1) Descobrir o PID</span>
+if [[ "$ALVO" =~ ^[0-9]+$ ]]; then PID=$ALVO; else PID=$(pgrep -o "$ALVO"); fi
+[ -z "$PID" ] &amp;&amp; { echo "Processo '$ALVO' nao encontrado"; exit 1; }
+
+<span class="c"># 2) Preparar o arquivo de saida</span>
+NOME=$(ps -p "$PID" -o comm=)
+ARQ="medicoes_${NOME}_$(date +%Y%m%d_%H%M%S).csv"
+echo "timestamp,pid,cpu,mem,rss_kb,threads,estado" &gt; "$ARQ"
+echo "Monitorando $NOME (PID $PID) -&gt; $ARQ"
+
+<span class="c"># 3) Laco de medicoes</span>
+for ((i=1; i&lt;=AMOSTRAS; i++)); do
+  kill -0 "$PID" 2&gt;/dev/null || { echo "Processo terminou"; break; }
+  read CPU MEM &lt;&lt;&lt; "$(top -b -n 1 -p "$PID" | tail -1 | awk '{print $9, $10}')"
+  read RSS THR EST &lt;&lt;&lt; "$(ps -p "$PID" -o rss=,nlwp=,stat=)"
+  echo "$(date +%T),$PID,$CPU,$MEM,$RSS,$THR,$EST" &gt;&gt; "$ARQ"
+
+  <span class="c"># 4) Gerenciar: alerta se passar do limite</span>
+  if awk -v c="$CPU" -v l="$LIMITE" 'BEGIN{exit !(c&gt;l)}'; then
+    echo "[ALERTA] $(date +%T) CPU=$CPU% &gt; $LIMITE%" | tee -a alertas.log
+  fi
+  sleep "$INTERVALO"
+done
+
+<span class="c"># 5) Resumo estatistico</span>
+echo "--- Resumo ---"
+awk -F, 'NR&gt;1 {c+=$3; m+=$5; n++; if($3&gt;mx) mx=$3; if($6&gt;t) t=$6}
+  END {printf "Amostras: %d\n", n
+       printf "CPU media: %.1f%%  max: %.1f%%\n", c/n, mx
+       printf "RSS medio: %.0f KB\nMax threads: %d\n", m/n, t}' "$ARQ"</pre></div>
+  <a class="dl" href="monitor.sh" download>Baixar monitor.sh</a>
+  <p>Alternativa sem editor — baixar direto no terminal:</p>
+  <div class="code"><pre>curl -O https://dcpc-cesar-school.github.io/projeto-integrador3-26.2/lab09/monitor.sh</pre></div>
+
+  <h3>5.3 Conferir o arquivo</h3>
+  <div class="code"><pre>wc -l monitor.sh           <span class="c"># ~36 linhas</span>
+head -3 monitor.sh         <span class="c"># 1ª linha deve ser #!/usr/bin/env bash</span>
+file monitor.sh            <span class="c"># NÃO pode aparecer "with CRLF line terminators"</span>
+bash -n monitor.sh &amp;&amp; echo "sintaxe OK"</pre></div>
+  <div class="out"><pre>monitor.sh: Bourne-Again shell script, ASCII text executable
+sintaxe OK</pre></div>
+  <p>Se aparecer <code>CRLF</code>, corrija com <code>sed -i 's/\r$//' monitor.sh</code> (veja <a href="#erros">Erros comuns</a>).</p>
+</section>
+
+<!-- 6 -->
+<section id="s6">
+  <h2><span class="num">6</span>Entender o script linha a linha</h2>
+  <div class="tbl"><table>
+    <tr><th>Trecho</th><th>O que faz</th></tr>
+    <tr><td><code>#!/usr/bin/env bash</code></td><td><em>Shebang</em>: diz ao sistema que o arquivo deve ser executado pelo Bash.</td></tr>
+    <tr><td><code>export LC_ALL=C</code></td><td>Força o idioma “C”: números saem com ponto (<code>12.5</code>), não vírgula — senão o CSV quebra.</td></tr>
+    <tr><td><code>ALVO=$1</code></td><td><code>$1</code>, <code>$2</code>… são os argumentos passados na linha de comando.</td></tr>
+    <tr><td><code>${2:-1}</code></td><td>Usa o 2º argumento; se não foi passado, usa o valor padrão <code>1</code>.</td></tr>
+    <tr><td><code>[ -z "$ALVO" ] &amp;&amp; {…; exit 1; }</code></td><td>Se o alvo está vazio (<code>-z</code>), mostra o uso e sai com código de erro 1.</td></tr>
+    <tr><td><code>[[ "$ALVO" =~ ^[0-9]+$ ]]</code></td><td>Expressão regular: o alvo é só dígitos? Então já é um PID.</td></tr>
+    <tr><td><code>PID=$(pgrep -o "$ALVO")</code></td><td><code>$( … )</code> executa um comando e guarda a saída na variável.</td></tr>
+    <tr><td><code>ps -p "$PID" -o comm=</code></td><td>Nome curto do processo, usado no nome do arquivo.</td></tr>
+    <tr><td><code>date +%Y%m%d_%H%M%S</code></td><td>Data e hora no nome do CSV → cada execução gera um arquivo novo.</td></tr>
+    <tr><td><code>&gt;</code> e <code>&gt;&gt;</code></td><td><code>&gt;</code> cria/sobrescreve (cabeçalho); <code>&gt;&gt;</code> acrescenta no final (cada amostra).</td></tr>
+    <tr><td><code>for ((i=1; i&lt;=AMOSTRAS; i++))</code></td><td>Laço no estilo C: repete <code>AMOSTRAS</code> vezes.</td></tr>
+    <tr><td><code>kill -0 … || { …; break; }</code></td><td>Se o processo morreu, para o laço.</td></tr>
+    <tr><td><code>read CPU MEM &lt;&lt;&lt; "…"</code></td><td><em>Here-string</em>: separa a saída “<code>98.0 1.2</code>” em duas variáveis.</td></tr>
+    <tr><td><code>tee -a alertas.log</code></td><td>Mostra o alerta na tela <em>e</em> acrescenta no arquivo de log.</td></tr>
+    <tr><td><code>sleep "$INTERVALO"</code></td><td>Espera N segundos até a próxima amostra.</td></tr>
+    <tr><td><code>awk -F, 'NR&gt;1 {…} END {…}'</code></td><td>Lê o CSV (separador vírgula), pula o cabeçalho (<code>NR&gt;1</code>), acumula somas e máximos; no <code>END</code> imprime médias.</td></tr>
+  </table></div>
+</section>
+
+<!-- 7 -->
+<section id="s7">
+  <h2><span class="num">7</span>Dar permissão de execução e testar</h2>
+  <div class="code"><pre>ls -l monitor.sh          <span class="c"># antes: -rw-r--r--  (sem "x")</span>
+chmod +x monitor.sh
+ls -l monitor.sh          <span class="c"># depois: -rwxr-xr-x</span></pre></div>
+
+  <h3>7.1 Teste 1 — sem argumentos</h3>
+  <div class="code"><pre>./monitor.sh</pre></div>
+  <div class="out"><pre>Uso: ./monitor.sh &lt;PID|nome&gt; [intervalo] [amostras] [limite]</pre></div>
+
+  <h3>7.2 Teste 2 — processo inexistente</h3>
+  <div class="code"><pre>./monitor.sh programa_que_nao_existe</pre></div>
+  <div class="out"><pre>Processo 'programa_que_nao_existe' nao encontrado</pre></div>
+
+  <h3>7.3 Teste 3 — o seu próprio shell (3 amostras)</h3>
+  <div class="code"><pre>./monitor.sh $$ 1 3</pre></div>
+  <div class="out"><pre>Monitorando bash (PID 1234) -&gt; medicoes_bash_20261029_191500.csv
+--- Resumo ---
+Amostras: 3
+CPU media: 0.0%  max: 0.0%
+RSS medio: 5340 KB
+Max threads: 1</pre></div>
+  <div class="check"><strong>✓ Checkpoint:</strong> os três testes deram a saída esperada e existe um arquivo <code>medicoes_bash_*.csv</code> na pasta (<code>ls</code>).</div>
+</section>
+
+<!-- 8 -->
+<section id="s8">
+  <h2><span class="num">8</span>Subir uma carga para monitorar</h2>
+  <p>Um shell parado não mostra nada interessante. Vamos rodar um programa que ocupa CPU <strong>em segundo plano</strong> (o <code>&amp;</code> no final devolve o terminal):</p>
+  <div class="code"><pre><span class="c"># 4 threads ocupando CPU por 90 segundos; a saída vai para o "lixo"</span>
+sysbench cpu --threads=4 --time=90 run &gt; /dev/null &amp;</pre></div>
+  <div class="out"><pre>[1] 4211</pre></div>
+  <p><code>[1]</code> é o número do <em>job</em> e <code>4211</code> o PID. Confira:</p>
+  <div class="code"><pre>jobs                 <span class="c"># jobs em segundo plano deste terminal</span>
+pgrep -a sysbench    <span class="c"># PID e linha de comando</span></pre></div>
+  <div class="note"><strong>Dica: veja as threads ao vivo</strong>Abra um <strong>segundo terminal</strong> e rode <code>top -H -p $(pgrep sysbench)</code>. Cada linha é uma thread (coluna PID mostra o TID). Saia com <kbd>q</kbd>.</div>
+</section>
+
+<!-- 9 -->
+<section id="s9">
+  <h2><span class="num">9</span>Executar o monitor</h2>
+  <p>Formato: <code>./monitor.sh &lt;alvo&gt; &lt;intervalo_s&gt; &lt;amostras&gt; &lt;limite_cpu&gt;</code></p>
+  <div class="code"><pre><span class="c"># sysbench, 1 amostra/s, 30 amostras, alerta acima de 150%</span>
+./monitor.sh sysbench 1 30 150</pre></div>
+  <div class="out"><pre>Monitorando sysbench (PID 4211) -&gt; medicoes_sysbench_20261029_190201.csv
+[ALERTA] 19:02:01 CPU=398.0% &gt; 150%
+[ALERTA] 19:02:02 CPU=397.3% &gt; 150%
+...
+--- Resumo ---
+Amostras: 30
+CPU media: 395.8%  max: 399.0%
+RSS medio: 5120 KB
+Max threads: 5</pre></div>
+  <div class="note"><strong>Por que passa de 100%?</strong>No <code>top</code>, 100% = um núcleo inteiro. Quatro threads em quatro núcleos somam ~400%. Se sua máquina tem 2 núcleos (<code>nproc</code>), o máximo será ~200%.</div>
+  <div class="note"><strong>Por que 5 threads e não 4?</strong>As 4 threads de trabalho + a thread principal do processo.</div>
+  <p>Experimente variar os parâmetros:</p>
+  <div class="code"><pre>./monitor.sh sysbench 2 10 300     <span class="c"># 1 amostra a cada 2 s, limite maior</span>
+./monitor.sh 4211 1 5               <span class="c"># usando o PID em vez do nome</span></pre></div>
+</section>
+
+<!-- 10 -->
+<section id="s10">
+  <h2><span class="num">10</span>Analisar os resultados</h2>
+  <div class="code"><pre>ls -lh medicoes_*.csv alertas.log      <span class="c"># arquivos gerados</span>
+column -s, -t medicoes_sysbench_*.csv | head   <span class="c"># CSV em formato de tabela</span>
+wc -l alertas.log                      <span class="c"># quantos alertas</span>
+tail -5 alertas.log                    <span class="c"># últimos alertas</span>
+sort -t, -k3 -nr medicoes_sysbench_*.csv | head -3   <span class="c"># 3 maiores picos de CPU</span></pre></div>
+  <div class="out"><pre>timestamp  pid   cpu    mem  rss_kb  threads  estado
+19:02:01   4211  398.0  0.1  5120    5        Sl
+19:02:02   4211  397.3  0.1  5120    5        Sl
+19:02:03   4211  399.0  0.1  5120    5        Sl</pre></div>
+  <p>Estado <code>Sl</code>: <strong>S</strong> = dormindo no instante da leitura, <strong>l</strong> = multi-thread. Veja todos os códigos com <code>man ps</code> → seção <em>PROCESS STATE CODES</em>.</p>
+  <h3>10.1 Levar para a planilha</h3>
+  <p>No WSL, a pasta Linux aparece no Explorer do Windows em <code>\\wsl$\</code>. Ou copie para o Windows:</p>
+  <div class="code"><pre>cp medicoes_*.csv /mnt/c/Users/SEU_USUARIO_WINDOWS/Desktop/</pre></div>
+  <p>Abra no Excel/Google Sheets e faça um gráfico de linha de <code>cpu</code> × <code>timestamp</code>.</p>
+</section>
+
+<!-- 11 -->
+<section id="s11">
+  <h2><span class="num">11</span>Comparar threads × processos</h2>
+  <p>O <code>sysbench</code> cria <strong>threads</strong>; o <code>stress-ng</code> cria <strong>processos</strong> (workers). Rode o stress-ng e monitore:</p>
+  <div class="code"><pre>stress-ng --cpu 2 --vm 1 --vm-bytes 512M --timeout 90s &amp;
+sleep 2
+pstree -p $(pgrep -o stress-ng)        <span class="c"># árvore: 1 pai + vários filhos</span>
+ps -T -p $(pgrep -o stress-ng)         <span class="c"># threads do processo pai</span>
+./monitor.sh stress-ng 1 20 50</pre></div>
+  <p>Repare: o monitor mede só o processo <strong>pai</strong>, que quase não usa CPU — o trabalho está nos filhos. Para monitorar um filho, use o PID dele (veja no <code>pstree</code>).</p>
+
+  <h3>11.1 Alternativa sem sysbench: programa com threads em Python</h3>
+  <div class="code"><pre>cat &gt; carga_threads.py &lt;&lt;'EOF'
+import threading, time
+def trabalho():
+    fim = time.time() + 90
+    while time.time() &lt; fim:
+        sum(i*i for i in range(10000))
+for _ in range(4):
+    threading.Thread(target=trabalho).start()
+EOF
+python3 carga_threads.py &amp;
+./monitor.sh python3 1 20 50</pre></div>
+  <p>Você verá 5 threads, mas %CPU perto de 100% (não 400%): o Python executa uma thread por vez por causa do <em>GIL</em>. Boa pergunta para discutir em sala!</p>
+
+  <h3>11.2 Preencha</h3>
+  <div class="tbl"><table>
+    <tr><th></th><th>sysbench</th><th>stress-ng</th><th>python3</th></tr>
+    <tr><td>Nº de PIDs</td><td></td><td></td><td></td></tr>
+    <tr><td>Nº de threads (nlwp)</td><td></td><td></td><td></td></tr>
+    <tr><td>%CPU máximo</td><td></td><td></td><td></td></tr>
+    <tr><td>RSS médio (KB)</td><td></td><td></td><td></td></tr>
+  </table></div>
+</section>
+
+<!-- 12 -->
+<section id="s12">
+  <h2><span class="num">12</span>Encerrar cargas e limpar</h2>
+  <div class="code"><pre>jobs                       <span class="c"># o que ainda está rodando neste terminal</span>
+kill %1                    <span class="c"># encerra o job 1 (SIGTERM)</span>
+pkill sysbench             <span class="c"># encerra pelo nome</span>
+pkill stress-ng
+pkill -f carga_threads.py  <span class="c"># -f procura na linha de comando inteira</span>
+pgrep -a "sysbench|stress-ng|python3"   <span class="c"># não deve sobrar nada</span></pre></div>
+  <div class="code"><pre><span class="c"># apagar as medições (cuidado: não tem lixeira)</span>
+rm -i medicoes_*.csv alertas.log</pre></div>
+</section>
+
+<!-- 13 -->
+<section id="s13">
+  <h2><span class="num">13</span>Salvar no GitHub</h2>
+  <p>O script e os resultados devem ficar no <strong>repositório da equipe</strong> no GitHub. É a partir dele que o monitor vai evoluir nas próximas aulas e entrar no pipeline de CI/CD.</p>
+
+  <h3>13.1 Instalar e configurar o Git (uma vez por máquina)</h3>
+  <div class="code"><pre>sudo dnf install -y git
+git --version
+
+git config --global user.name  "Seu Nome"
+git config --global user.email "seu_email@cesar.school"   <span class="c"># o mesmo da conta GitHub</span>
+git config --global init.defaultBranch main
+git config --global core.autocrlf input    <span class="c"># evita o problema de CRLF</span>
+git config --global --list</pre></div>
+
+  <h3>13.2 Autenticar com o GitHub por chave SSH (uma vez por máquina)</h3>
+  <p>O GitHub não aceita senha no terminal. A forma mais simples é uma chave SSH:</p>
+  <div class="code"><pre>ssh-keygen -t ed25519 -C "seu_email@cesar.school"
+<span class="c"># pressione Enter 3 vezes (local padrão, sem senha — ou defina uma)</span>
+
+cat ~/.ssh/id_ed25519.pub
+<span class="c"># copie a linha inteira que começa com ssh-ed25519</span></pre></div>
+  <ol class="steps">
+    <li>No GitHub: foto do perfil → <strong>Settings</strong> → <strong>SSH and GPG keys</strong> → <strong>New SSH key</strong>.</li>
+    <li>Título: algo como <code>WSL-AlmaLinux-notebook</code>. Cole a chave em <em>Key</em> e clique em <strong>Add SSH key</strong>.</li>
+  </ol>
+  <div class="code"><pre>ssh -T git@github.com
+<span class="c"># na 1ª vez, responda "yes" para confiar no servidor</span></pre></div>
+  <div class="out"><pre>Hi seu_usuario! You've successfully authenticated, but GitHub does not provide shell access.</pre></div>
+
+  <h3>13.3 Obter o repositório da equipe</h3>
+  <p><strong>Uma pessoa da equipe</strong> cria o repositório no GitHub (<strong>New repository</strong>, marque <em>Add a README</em>) e adiciona os colegas em <strong>Settings → Collaborators</strong>. O professor também deve ser adicionado.</p>
+  <p>Depois, <strong>cada integrante</strong> clona — copie o endereço em <strong>Code → SSH</strong>:</p>
+  <div class="code"><pre>cd ~
+git clone git@github.com:EQUIPE_OU_USUARIO/NOME_DO_REPO.git
+cd NOME_DO_REPO
+git status</pre></div>
+
+  <h3>13.4 Organizar os arquivos do lab no repositório</h3>
+  <div class="code"><pre>mkdir -p scripts labs/lab09
+cp ~/lab09/monitor.sh scripts/
+cp ~/lab09/medicoes_*.csv ~/lab09/alertas.log labs/lab09/
+ls -lR scripts labs</pre></div>
+  <p>Estrutura esperada (ela vai crescer até o fim do projeto):</p>
+  <div class="out"><pre>NOME_DO_REPO/
+├── README.md
+├── scripts/
+│   └── monitor.sh          ← o script (evolui nas próximas aulas)
+└── labs/
+    └── lab09/
+        ├── medicoes_sysbench_20261029_190201.csv
+        ├── medicoes_stress-ng_20261029_191030.csv
+        ├── alertas.log
+        └── relatorio.pdf</pre></div>
+
+  <h3>13.5 Registrar (commit) e enviar (push)</h3>
+  <div class="code"><pre>git status                         <span class="c"># arquivos novos aparecem em vermelho</span>
+git add scripts/monitor.sh labs/lab09/
+git status                         <span class="c"># agora em verde: prontos para o commit</span>
+git commit -m "Lab 09: monitor.sh com coleta de CPU, memoria e threads"
+git push</pre></div>
+  <p>Abra o repositório no navegador e confira se os arquivos estão lá.</p>
+  <div class="note"><strong>A permissão de execução vai junto</strong>O Git guarda o <code>chmod +x</code>. Confira com <code>git ls-files -s scripts/monitor.sh</code> — deve começar com <code>100755</code>. Se aparecer <code>100644</code>: <code>git update-index --chmod=+x scripts/monitor.sh</code>, depois commit e push.</div>
+
+  <h3>13.6 Trabalhando em equipe</h3>
+  <div class="code"><pre>git pull                           <span class="c"># SEMPRE antes de começar a trabalhar</span>
+<span class="c"># … editar, testar …</span>
+git add -A
+git commit -m "monitor.sh: alerta de memoria por RSS"
+git push</pre></div>
+  <p>Se o <code>push</code> for recusado porque um colega enviou antes, traga as mudanças e tente de novo:</p>
+  <div class="code"><pre>git pull --rebase
+git push</pre></div>
+
+  <h3>13.7 Documentar no README</h3>
+  <p>Acrescente ao <code>README.md</code> como usar o script:</p>
+  <div class="code"><pre>cat &gt;&gt; README.md &lt;&lt;'EOF'
+
+## scripts/monitor.sh
+Mede CPU, memória e threads de um processo e grava em CSV.
+
+    ./scripts/monitor.sh &lt;PID|nome&gt; [intervalo_s] [amostras] [limite_cpu]
+    ./scripts/monitor.sh sysbench 1 30 150
+
+Saídas: `medicoes_&lt;nome&gt;_&lt;data&gt;.csv` e `alertas.log`.
+EOF
+git add README.md &amp;&amp; git commit -m "README: uso do monitor.sh" &amp;&amp; git push</pre></div>
+  <div class="check"><strong>✓ Checkpoint:</strong> o repositório da equipe no GitHub mostra <code>scripts/monitor.sh</code>, a pasta <code>labs/lab09/</code> com os CSVs e o log, e o README atualizado. Envie o link do repositório na atividade do Classroom.</div>
+
+  <h3>13.8 Registrar o ambiente da coleta (obrigatório)</h3>
+  <p>Os números só fazem sentido sabendo em que máquina foram medidos. Gere um arquivo de ambiente junto com os dados:</p>
+  <div class="code"><pre>cd ~/lab09
+{
+  echo "equipe: NOME_DA_EQUIPE"
+  echo "aluno: $(git config user.name)"
+  echo "data: $(date '+%F %T')"
+  echo "distro: $(cat /etc/redhat-release)"
+  echo "kernel: $(uname -r)"
+  echo "nucleos: $(nproc)"
+  echo "memoria_total: $(free -h | awk '/Mem:/{print $2}')"
+  echo "wsl: $(grep -qi microsoft /proc/version &amp;&amp; echo sim || echo nao)"
+} &gt; ambiente.txt
+cat ambiente.txt</pre></div>
+  <p>Copie também para o repositório: <code>cp ~/lab09/ambiente.txt ~/NOME_DO_REPO/labs/lab09/</code> e faça commit/push.</p>
+</section>
+
+<!-- 14 -->
+<section id="s14">
+  <h2><span class="num">14</span>Entregar uma cópia no Drive</h2>
+  <p>Além do GitHub, envie um pacote com os resultados para a <strong>pasta da turma no Google Drive</strong> (link no Classroom). É por ele que o professor vai comparar os dados de todas as equipes.</p>
+
+  <h3>14.1 Padrão de nome (siga exatamente)</h3>
+  <div class="out"><pre>lab09_&lt;equipe&gt;_&lt;primeironome-sobrenome&gt;.tar.gz
+exemplo: lab09_equipe3_maria-silva.tar.gz</pre></div>
+
+  <h3>14.2 Montar o pacote</h3>
+  <div class="code"><pre>cd ~/lab09
+ls     <span class="c"># confira: monitor.sh, medicoes_*.csv, alertas.log, ambiente.txt, relatorio.pdf</span>
+
+PACOTE=lab09_equipe3_maria-silva.tar.gz      <span class="c"># ajuste o nome!</span>
+tar -czvf "$PACOTE" monitor.sh medicoes_*.csv alertas.log ambiente.txt relatorio.pdf
+tar -tzvf "$PACOTE"                          <span class="c"># lista o conteúdo para conferir</span></pre></div>
+  <div class="note"><strong>Prefere .zip?</strong><code>sudo dnf install -y zip</code> e depois <code>zip lab09_equipe3_maria-silva.zip monitor.sh medicoes_*.csv alertas.log ambiente.txt relatorio.pdf</code>.</div>
+
+  <h3>14.3 Levar o arquivo até o navegador</h3>
+  <p><strong>WSL no Windows:</strong> copie para a Área de Trabalho do Windows (o disco C: fica em <code>/mnt/c</code>):</p>
+  <div class="code"><pre>ls /mnt/c/Users/                             <span class="c"># descubra seu usuário do Windows</span>
+cp "$PACOTE" /mnt/c/Users/SEU_USUARIO_WINDOWS/Desktop/</pre></div>
+  <p>Ou abra a pasta do lab no Explorer do Windows com <code>explorer.exe .</code></p>
+  <p><strong>VM Red Hat com interface gráfica:</strong> abra o navegador da própria VM e envie a partir de <code>~/lab09</code>.</p>
+  <p><strong>Servidor remoto sem interface:</strong> traga o arquivo para o seu computador (rode no <em>seu</em> terminal, não no servidor):</p>
+  <div class="code"><pre>scp usuario@IP_DO_SERVIDOR:~/lab09/lab09_*.tar.gz .</pre></div>
+
+  <h3>14.4 Enviar</h3>
+  <ol class="steps">
+    <li>Abra a pasta da turma no Google Drive (link no Classroom).</li>
+    <li>Entre na subpasta <strong>Lab 09</strong> → arraste o arquivo ou use <strong>Novo → Upload de arquivo</strong>.</li>
+    <li>Confira se o nome segue o padrão e se o tamanho não é 0 KB.</li>
+  </ol>
+  <div class="check"><strong>✓ Checkpoint final:</strong> (1) link do repositório no Classroom e (2) pacote <code>lab09_&lt;equipe&gt;_&lt;nome&gt;.tar.gz</code> na pasta do Drive.</div>
+</section>
+
+<!-- ERROS -->
+<section id="erros">
+  <h2><span class="num">!</span>Erros comuns</h2>
+  <div class="tbl"><table>
+    <tr><th>Sintoma</th><th>Causa</th><th>Solução</th></tr>
+    <tr><td><code>/usr/bin/env: 'bash\r': No such file or directory</code> ou <code>$'\r': command not found</code></td><td>Arquivo salvo no Windows com quebra de linha CRLF</td><td><code>sed -i 's/\r$//' monitor.sh</code> — ou no VS Code clique em “CRLF” no rodapé e troque para “LF”</td></tr>
+    <tr><td><code>Permission denied</code></td><td>Faltou permissão de execução</td><td><code>chmod +x monitor.sh</code></td></tr>
+    <tr><td><code>command not found: monitor.sh</code></td><td>Faltou o <code>./</code> antes do nome</td><td><code>./monitor.sh …</code></td></tr>
+    <tr><td><code>Processo 'X' nao encontrado</code></td><td>A carga já terminou ou o nome está diferente</td><td><code>pgrep -a nome</code> e suba a carga de novo</td></tr>
+    <tr><td>Números com vírgula quebrando o CSV</td><td>Sistema em português</td><td>Não remova o <code>export LC_ALL=C</code></td></tr>
+    <tr><td>Monitora o processo errado</td><td><code>pgrep -o</code> pega o mais antigo com aquele nome</td><td>Passe o PID em vez do nome</td></tr>
+    <tr><td><code>division by zero</code> no resumo</td><td>O processo terminou antes da 1ª amostra</td><td>Suba a carga antes ou aumente o <code>--time</code></td></tr>
+    <tr><td><code>No match for argument: sysbench</code></td><td>EPEL não habilitado</td><td>Refaça a seção <a href="#s2">2.2</a> ou use <code>stress-ng</code>/Python</td></tr>
+    <tr><td><code>This system is not registered…</code> (RHEL)</td><td>RHEL sem assinatura ativa</td><td><code>sudo subscription-manager register</code> (conta Red Hat Developer gratuita) ou use Rocky/AlmaLinux</td></tr>
+    <tr><td><code>nano: command not found</code></td><td>Instalação mínima</td><td><code>sudo dnf install -y nano</code> ou use <code>vi</code></td></tr>
+    <tr><td><code>pstree: command not found</code></td><td>Falta o pacote psmisc</td><td><code>sudo dnf install -y psmisc</code></td></tr>
+    <tr><td><code>git@github.com: Permission denied (publickey)</code></td><td>Chave SSH não cadastrada no GitHub</td><td>Refaça a seção <a href="#s13">13.2</a> e teste com <code>ssh -T git@github.com</code></td></tr>
+    <tr><td><code>Support for password authentication was removed</code></td><td>Clonou pelo endereço HTTPS e tentou usar senha</td><td>Use o endereço SSH: <code>git remote set-url origin git@github.com:EQUIPE/REPO.git</code></td></tr>
+    <tr><td><code>! [rejected] … (fetch first)</code></td><td>Um colega enviou commits antes de você</td><td><code>git pull --rebase</code> e depois <code>git push</code></td></tr>
+    <tr><td><code>Author identity unknown</code></td><td>Git sem nome/e-mail configurados</td><td>Refaça a seção <a href="#s13">13.1</a></td></tr>
+  </table></div>
+</section>
+
+<!-- DESAFIO -->
+<section id="desafio">
+  <h2><span class="num">★</span>Desafio e entrega</h2>
+  <p>Estenda o script para <strong>gerenciar</strong> o processo, não só medir:</p>
+  <ol class="steps">
+    <li><strong>Proteção de memória:</strong> se o RSS passar de N MB, envie <code>kill -15 "$PID"</code> e registre o evento em <code>alertas.log</code>. Teste com <code>stress-ng --vm 1 --vm-bytes 1G</code>.</li>
+    <li><strong>Prioridade:</strong> aplique <code>renice +10 -p "$PID"</code> quando a CPU passar do limite. Confira a coluna <code>NI</code> no <code>top</code>.</li>
+    <li><strong>Contexto do sistema:</strong> acrescente ao CSV o load average de 1 min (<code>cut -d' ' -f1 /proc/loadavg</code>) e a memória disponível (<code>free -m | awk '/Mem:/{print $7}'</code>).</li>
+    <li><strong>Gráfico:</strong> plote o CSV em planilha ou com <code>gnuplot</code> (<code>sudo dnf install -y gnuplot</code>).</li>
+    <li><strong>Comparação:</strong> preencha a tabela da seção 11 e explique as diferenças.</li>
+  </ol>
+  <h3>Entregáveis</h3>
+  <div class="tbl"><table>
+    <tr><th>Arquivo</th><th>Conteúdo</th></tr>
+    <tr><td><code>monitor.sh</code></td><td>Script comentado, com as extensões do desafio</td></tr>
+    <tr><td><code>medicoes_*.csv</code></td><td>Dados de cada programa monitorado</td></tr>
+    <tr><td><code>alertas.log</code></td><td>Eventos registrados</td></tr>
+    <tr><td><code>relatorio.pdf</code></td><td>1 página: o que os dados mostram</td></tr>
+    <tr><td><code>ambiente.txt</code></td><td>Máquina onde os dados foram coletados (seção 13.8)</td></tr>
+  </table></div>
+  <p><strong>Onde entregar:</strong> no repositório da equipe no GitHub (seção <a href="#s13">13</a>) <em>e</em> como pacote na pasta da turma no Drive (seção <a href="#s14">14</a>).</p>
+  <div class="note"><strong>Ligação com o Projeto Integrador</strong>Coloque o script na pasta <code>scripts/</code> do repositório da sua equipe e use-o para monitorar o processo da <em>sua aplicação</em> (ex.: <code>./monitor.sh java 1 60 100</code>). Na próxima aula ele evolui para coletar os 3 níveis do painel: hardware/SO, containers e serviços.</div>
+</section>
+
+<!-- COLA -->
+<section id="cola">
+  <h2><span class="num">⌘</span>Cola rápida</h2>
+  <div class="tbl"><table>
+    <tr><th>Objetivo</th><th>Comando</th></tr>
+    <tr><td>Instalar pacote</td><td><code>sudo dnf install -y nome</code></td></tr>
+    <tr><td>Procurar pacote</td><td><code>dnf search nome</code> · <code>dnf provides */comando</code></td></tr>
+    <tr><td>Ver processos ao vivo</td><td><code>top</code> (<kbd>P</kbd> CPU · <kbd>M</kbd> memória · <kbd>1</kbd> núcleos · <kbd>H</kbd> threads · <kbd>q</kbd> sair)</td></tr>
+    <tr><td>Foto em texto</td><td><code>top -b -n 1 -p PID</code></td></tr>
+    <tr><td>Campos específicos</td><td><code>ps -p PID -o pid,comm,%cpu,%mem,rss,nlwp,stat</code></td></tr>
+    <tr><td>Threads de um processo</td><td><code>ps -T -p PID</code> · <code>top -H -p PID</code> · <code>ls /proc/PID/task</code></td></tr>
+    <tr><td>Árvore de processos</td><td><code>pstree -p PID</code></td></tr>
+    <tr><td>Memória do sistema</td><td><code>free -h</code> · <code>vmstat 1 5</code></td></tr>
+    <tr><td>Salvar saída</td><td><code>cmd &gt; arq</code> · <code>cmd &gt;&gt; arq</code> · <code>cmd | tee -a arq</code></td></tr>
+    <tr><td>Segundo plano</td><td><code>cmd &amp;</code> · <code>jobs</code> · <code>kill %1</code></td></tr>
+    <tr><td>Encerrar / prioridade</td><td><code>kill -15 PID</code> · <code>pkill nome</code> · <code>renice +10 -p PID</code></td></tr>
+    <tr><td>Git no dia a dia</td><td><code>git pull</code> · <code>git add -A</code> · <code>git commit -m "msg"</code> · <code>git push</code></td></tr>
+  </table></div>
+</section>
+
+<footer>Infraestrutura de Software · ADS 2026.2 · CESAR School · Prof. David Cunha</footer>
+</div>
+
+<script>
+document.querySelectorAll('.code').forEach(function(box){
+  if (box.classList.contains('out')) return;
+  var pre = box.querySelector('pre'); if(!pre) return;
+  var b = document.createElement('button');
+  b.className = 'copy'; b.type = 'button'; b.textContent = 'Copiar';
+  b.addEventListener('click', function(){
+    var txt = pre.innerText;
+    var done = function(){ b.textContent = 'Copiado!'; setTimeout(function(){ b.textContent = 'Copiar'; }, 1500); };
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(txt).then(done, function(){ fallback(txt); done(); });
+    } else { fallback(txt); done(); }
+  });
+  box.appendChild(b);
+});
+function fallback(t){
+  var a = document.createElement('textarea'); a.value = t; document.body.appendChild(a);
+  a.select(); try { document.execCommand('copy'); } catch(e){} document.body.removeChild(a);
+}
+</script>
+</body>
+</html>
