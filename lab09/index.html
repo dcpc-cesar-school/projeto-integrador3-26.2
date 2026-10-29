@@ -116,7 +116,7 @@ footer{margin-top:60px;padding-top:20px;border-top:1px solid var(--border);color
     <tr><td><code>threads</code></td><td>Número de threads do processo</td><td><code>ps</code> (campo <code>nlwp</code>)</td></tr>
     <tr><td><code>estado</code></td><td>R executando, S dormindo, D esperando E/S, Z zumbi…</td><td><code>ps</code> (campo <code>stat</code>)</td></tr>
   </table></div>
-  <p><strong>Pré-requisitos:</strong> terminal Linux da família Red Hat (RHEL 8/9, Rocky Linux, AlmaLinux, CentOS Stream ou Fedora) e um usuário com permissão de <code>sudo</code>.</p>
+  <p><strong>Pré-requisitos:</strong> uma máquina com <strong>Red Hat Enterprise Linux</strong> (os comandos também funcionam em Rocky, AlmaLinux, CentOS Stream e Fedora) e um usuário com permissão de <code>sudo</code>.</p>
   <div class="note"><strong>Convenção desta página</strong>Linhas que começam com <code>#</code> dentro dos blocos são comentários — não precisam ser digitadas. Blocos com fundo claro e borda tracejada mostram a <em>saída esperada</em>.</div>
 </section>
 
@@ -124,25 +124,19 @@ footer{margin-top:60px;padding-top:20px;border-top:1px solid var(--border);color
 <section id="s1">
   <h2><span class="num">1</span>Preparar o ambiente</h2>
 
-  <h3>1.1 Se você está no Windows: WSL2 com uma distro compatível com Red Hat</h3>
-  <p>Abra o <strong>PowerShell como administrador</strong> e liste as distribuições disponíveis:</p>
-  <div class="code"><pre>wsl --list --online</pre></div>
-  <p>Escolha uma da família Red Hat (por exemplo <strong>AlmaLinux</strong> ou <strong>Oracle Linux</strong>) e instale usando o nome exatamente como apareceu na lista:</p>
-  <div class="code"><pre><span class="c"># exemplo — use o nome que apareceu na sua lista</span>
-wsl --install -d AlmaLinux-9</pre></div>
-  <p>Reinicie se for pedido, abra a distro pelo menu Iniciar e crie seu usuário e senha.</p>
+  <h3>1.1 Abrir o terminal</h3>
+  <p>Na máquina Red Hat do laboratório, faça login com seu usuário e abra o terminal: <strong>Atividades</strong> (canto superior esquerdo) → digite <em>Terminal</em> → <kbd>Enter</kbd>.</p>
+  <p>Se for acessar a máquina remotamente, conecte por SSH:</p>
+  <div class="code"><pre>ssh SEU_USUARIO@IP_DA_MAQUINA</pre></div>
 
-  <h3>1.2 Se você está numa VM ou servidor Red Hat</h3>
-  <p>Basta abrir o terminal (ou conectar via <code>ssh usuario@ip</code>).</p>
-
-  <h3>1.3 Confirmar a distribuição e a máquina</h3>
+  <h3>1.2 Confirmar a distribuição e a máquina</h3>
   <div class="code"><pre>cat /etc/redhat-release     <span class="c"># qual distro e versão</span>
 uname -r                     <span class="c"># versão do kernel</span>
 nproc                        <span class="c"># quantos núcleos de CPU</span>
 free -h                      <span class="c"># memória total e disponível</span>
 whoami                       <span class="c"># seu usuário</span></pre></div>
-  <div class="out"><pre>AlmaLinux release 9.4 (Seafoam Ocelot)
-5.15.153.1-microsoft-standard-WSL2
+  <div class="out"><pre>Red Hat Enterprise Linux release 9.4 (Plow)
+5.14.0-427.13.1.el9_4.x86_64
 4
                total        used        free      shared  buff/cache   available
 Mem:           7.7Gi       1.1Gi       5.9Gi       3.0Mi       0.9Gi       6.4Gi
@@ -240,13 +234,18 @@ pwd                 <span class="c"># deve mostrar /home/SEU_USUARIO/lab09</span
   <h2><span class="num">5</span>Escrever o script</h2>
 
   <h3>5.1 Abrir o editor</h3>
-  <p><strong>Opção A — nano</strong> (mais simples):</p>
+  <p>Vamos usar o editor <strong>nano</strong> (instalado na seção 2.1):</p>
   <div class="code"><pre>nano monitor.sh</pre></div>
-  <p>Cole o código (no terminal: <kbd>Ctrl</kbd>+<kbd>Shift</kbd>+<kbd>V</kbd> ou botão direito). Salve com <kbd>Ctrl</kbd>+<kbd>O</kbd> → <kbd>Enter</kbd> e saia com <kbd>Ctrl</kbd>+<kbd>X</kbd>.</p>
-  <p><strong>Opção B — vi/vim</strong> (vem em toda instalação Red Hat):</p>
-  <div class="code"><pre>vi monitor.sh</pre></div>
-  <p>Pressione <kbd>i</kbd> para entrar no modo de inserção, cole o código, pressione <kbd>Esc</kbd> e digite <code>:wq</code> + <kbd>Enter</kbd> para salvar e sair. Para sair <em>sem</em> salvar: <kbd>Esc</kbd> e <code>:q!</code>.</p>
-  <div class="note warn"><strong>Colando no vi?</strong>Se a indentação ficar “em escada”, antes de pressionar <kbd>i</kbd> digite <code>:set paste</code> + <kbd>Enter</kbd>.</div>
+  <div class="tbl"><table>
+    <tr><th>Ação no nano</th><th>Teclas</th></tr>
+    <tr><td>Colar o código copiado</td><td><kbd>Ctrl</kbd>+<kbd>Shift</kbd>+<kbd>V</kbd> (ou botão direito → Colar)</td></tr>
+    <tr><td>Salvar</td><td><kbd>Ctrl</kbd>+<kbd>O</kbd> e depois <kbd>Enter</kbd> para confirmar o nome</td></tr>
+    <tr><td>Sair</td><td><kbd>Ctrl</kbd>+<kbd>X</kbd> (se pedir para salvar, responda <kbd>Y</kbd> e <kbd>Enter</kbd>)</td></tr>
+    <tr><td>Procurar texto</td><td><kbd>Ctrl</kbd>+<kbd>W</kbd></td></tr>
+    <tr><td>Ir para a linha N</td><td><kbd>Ctrl</kbd>+<kbd>_</kbd> e digite o número</td></tr>
+    <tr><td>Mostrar números de linha</td><td><kbd>Alt</kbd>+<kbd>N</kbd></td></tr>
+  </table></div>
+  <div class="note"><strong>Dica</strong>A barra inferior do nano mostra os atalhos; <code>^</code> significa <kbd>Ctrl</kbd> e <code>M-</code> significa <kbd>Alt</kbd>.</div>
 
   <h3>5.2 O código</h3>
   <div class="code"><pre>#!/usr/bin/env bash
@@ -399,9 +398,9 @@ sort -t, -k3 -nr medicoes_sysbench_*.csv | head -3   <span class="c"># 3 maiores
 19:02:03   4211  399.0  0.1  5120    5        Sl</pre></div>
   <p>Estado <code>Sl</code>: <strong>S</strong> = dormindo no instante da leitura, <strong>l</strong> = multi-thread. Veja todos os códigos com <code>man ps</code> → seção <em>PROCESS STATE CODES</em>.</p>
   <h3>10.1 Levar para a planilha</h3>
-  <p>No WSL, a pasta Linux aparece no Explorer do Windows em <code>\\wsl$\</code>. Ou copie para o Windows:</p>
-  <div class="code"><pre>cp medicoes_*.csv /mnt/c/Users/SEU_USUARIO_WINDOWS/Desktop/</pre></div>
-  <p>Abra no Excel/Google Sheets e faça um gráfico de linha de <code>cpu</code> × <code>timestamp</code>.</p>
+  <p>Se a máquina tiver interface gráfica, abra o CSV direto no LibreOffice Calc:</p>
+  <div class="code"><pre>libreoffice --calc medicoes_sysbench_*.csv &amp;</pre></div>
+  <p>Ou envie o arquivo para o Google Drive pelo navegador da máquina e abra no Google Sheets. Faça um gráfico de linha de <code>cpu</code> × <code>timestamp</code>.</p>
 </section>
 
 <!-- 11 -->
@@ -476,7 +475,7 @@ cat ~/.ssh/id_ed25519.pub
 <span class="c"># copie a linha inteira que começa com ssh-ed25519</span></pre></div>
   <ol class="steps">
     <li>No GitHub: foto do perfil → <strong>Settings</strong> → <strong>SSH and GPG keys</strong> → <strong>New SSH key</strong>.</li>
-    <li>Título: algo como <code>WSL-AlmaLinux-notebook</code>. Cole a chave em <em>Key</em> e clique em <strong>Add SSH key</strong>.</li>
+    <li>Título: algo como <code>redhat-lab-maquina07</code>. Cole a chave em <em>Key</em> e clique em <strong>Add SSH key</strong>.</li>
   </ol>
   <div class="code"><pre>ssh -T git@github.com
 <span class="c"># na 1ª vez, responda "yes" para confiar no servidor</span></pre></div>
@@ -552,7 +551,6 @@ git add README.md &amp;&amp; git commit -m "README: uso do monitor.sh" &amp;&amp
   echo "kernel: $(uname -r)"
   echo "nucleos: $(nproc)"
   echo "memoria_total: $(free -h | awk '/Mem:/{print $2}')"
-  echo "wsl: $(grep -qi microsoft /proc/version &amp;&amp; echo sim || echo nao)"
 } &gt; ambiente.txt
 cat ambiente.txt</pre></div>
   <p>Copie também para o repositório: <code>cp ~/lab09/ambiente.txt ~/NOME_DO_REPO/labs/lab09/</code> e faça commit/push.</p>
@@ -577,13 +575,9 @@ tar -tzvf "$PACOTE"                          <span class="c"># lista o conteúdo
   <div class="note"><strong>Prefere .zip?</strong><code>sudo dnf install -y zip</code> e depois <code>zip lab09_equipe3_maria-silva.zip monitor.sh medicoes_*.csv alertas.log ambiente.txt relatorio.pdf</code>.</div>
 
   <h3>14.3 Levar o arquivo até o navegador</h3>
-  <p><strong>WSL no Windows:</strong> copie para a Área de Trabalho do Windows (o disco C: fica em <code>/mnt/c</code>):</p>
-  <div class="code"><pre>ls /mnt/c/Users/                             <span class="c"># descubra seu usuário do Windows</span>
-cp "$PACOTE" /mnt/c/Users/SEU_USUARIO_WINDOWS/Desktop/</pre></div>
-  <p>Ou abra a pasta do lab no Explorer do Windows com <code>explorer.exe .</code></p>
-  <p><strong>VM Red Hat com interface gráfica:</strong> abra o navegador da própria VM e envie a partir de <code>~/lab09</code>.</p>
-  <p><strong>Servidor remoto sem interface:</strong> traga o arquivo para o seu computador (rode no <em>seu</em> terminal, não no servidor):</p>
-  <div class="code"><pre>scp usuario@IP_DO_SERVIDOR:~/lab09/lab09_*.tar.gz .</pre></div>
+  <p><strong>Na própria máquina Red Hat:</strong> abra o Firefox, entre no Google Drive e envie o arquivo a partir da pasta <code>~/lab09</code> (no seletor de arquivos: <em>Pasta pessoal → lab09</em>).</p>
+  <p><strong>Se você acessou a máquina por SSH:</strong> traga o arquivo para o seu computador (rode no <em>seu</em> terminal, não na máquina Red Hat):</p>
+  <div class="code"><pre>scp SEU_USUARIO@IP_DA_MAQUINA:~/lab09/lab09_*.tar.gz .</pre></div>
 
   <h3>14.4 Enviar</h3>
   <ol class="steps">
@@ -608,7 +602,7 @@ cp "$PACOTE" /mnt/c/Users/SEU_USUARIO_WINDOWS/Desktop/</pre></div>
     <tr><td><code>division by zero</code> no resumo</td><td>O processo terminou antes da 1ª amostra</td><td>Suba a carga antes ou aumente o <code>--time</code></td></tr>
     <tr><td><code>No match for argument: sysbench</code></td><td>EPEL não habilitado</td><td>Refaça a seção <a href="#s2">2.2</a> ou use <code>stress-ng</code>/Python</td></tr>
     <tr><td><code>This system is not registered…</code> (RHEL)</td><td>RHEL sem assinatura ativa</td><td><code>sudo subscription-manager register</code> (conta Red Hat Developer gratuita) ou use Rocky/AlmaLinux</td></tr>
-    <tr><td><code>nano: command not found</code></td><td>Instalação mínima</td><td><code>sudo dnf install -y nano</code> ou use <code>vi</code></td></tr>
+    <tr><td><code>nano: command not found</code></td><td>Instalação mínima</td><td><code>sudo dnf install -y nano</code></td></tr>
     <tr><td><code>pstree: command not found</code></td><td>Falta o pacote psmisc</td><td><code>sudo dnf install -y psmisc</code></td></tr>
     <tr><td><code>git@github.com: Permission denied (publickey)</code></td><td>Chave SSH não cadastrada no GitHub</td><td>Refaça a seção <a href="#s13">13.2</a> e teste com <code>ssh -T git@github.com</code></td></tr>
     <tr><td><code>Support for password authentication was removed</code></td><td>Clonou pelo endereço HTTPS e tentou usar senha</td><td>Use o endereço SSH: <code>git remote set-url origin git@github.com:EQUIPE/REPO.git</code></td></tr>
