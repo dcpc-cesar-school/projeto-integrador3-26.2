@@ -116,15 +116,17 @@ footer{margin-top:60px;padding-top:20px;border-top:1px solid var(--border);color
 </table></div>
 
 <h2>Stack de referência</h2>
+<p>Cada equipe escolhe <strong>Java</strong> ou <strong>C / C++</strong> para o backend, o coletor e as estruturas de dados. O foco da avaliação é o backend; a interface pode usar o que for mais simples. As estruturas de dados avaliadas devem ser implementadas pela equipe, sem usar as coleções prontas da linguagem.</p>
 <div class="tbl"><table>
-  <tr><th>Camada</th><th>Escolha</th></tr>
-  <tr><td>Linguagem / build</td><td>Java 21 + Maven</td></tr>
-  <tr><td>Backend / API</td><td>Spring Boot (Web + Actuator)</td></tr>
-  <tr><td>Interface</td><td>Thymeleaf + Chart.js ou Vaadin</td></tr>
-  <tr><td>Métricas</td><td>Comandos do SO via <code>ProcessBuilder</code></td></tr>
-  <tr><td>Testes</td><td>JUnit 5 + JaCoCo</td></tr>
-  <tr><td>Containers e CI/CD</td><td>Docker, Docker Compose, GitHub Actions, GHCR</td></tr>
-  <tr><td>Sistema operacional dos labs</td><td>Red Hat Linux (RHEL, Rocky, AlmaLinux) ou WSL2</td></tr>
+  <tr><th>Camada</th><th>Opção Java</th><th>Opção C / C++</th></tr>
+  <tr><td>Linguagem / build</td><td>Java 21 + Maven</td><td>C11 ou C++17 + CMake (gcc/g++)</td></tr>
+  <tr><td>Backend / API</td><td>Spring Boot (Web + Actuator)</td><td>cpp-httplib ou Crow (C++); libmicrohttpd (C)</td></tr>
+  <tr><td>Interface</td><td>Thymeleaf + Chart.js ou Vaadin</td><td>Página HTML + Chart.js servida pelo backend</td></tr>
+  <tr><td>Threads e sincronização</td><td><code>Thread</code>, <code>ExecutorService</code>, <code>ReentrantLock</code>, <code>Semaphore</code></td><td><code>std::thread</code>, <code>std::mutex</code>, <code>std::condition_variable</code> ou pthreads</td></tr>
+  <tr><td>Métricas do SO</td><td>Comandos via <code>ProcessBuilder</code></td><td>Comandos via <code>popen()</code> ou leitura direta de <code>/proc</code></td></tr>
+  <tr><td>Testes</td><td>JUnit 5 + JaCoCo</td><td>GoogleTest ou Catch2 (C++); Unity ou CUnit (C)</td></tr>
+  <tr><td>Containers e CI/CD</td><td colspan="2">Docker, Docker Compose, GitHub Actions, GHCR (iguais para as duas opções)</td></tr>
+  <tr><td>Sistema operacional dos labs</td><td colspan="2">Red Hat Linux (RHEL, Rocky, AlmaLinux) ou WSL2</td></tr>
 </table></div>
 
 <h2>Níveis de entrega</h2>
