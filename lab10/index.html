@@ -1,0 +1,924 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<title>Lab 10 — monitor.sh no Amazon Linux 2023</title>
+<meta name="description" content="Passo a passo para criar e executar um script de monitoramento de processos no Amazon Linux 2023 (EC2), sem EPEL e sem sysbench — Infraestrutura de Software, CESAR School.">
+<style>
+:root{
+  --bg:#f7f7f5; --surface:#ffffff; --text:#1d1d1f; --muted:#5f6368; --border:#e2e2de;
+  --accent:#b3261e; --accent-soft:#fbeceb; --code-bg:#1e1f22; --code-text:#e6e6e6;
+  --warn:#8a5a00; --warn-soft:#fff4dc; --ok:#0b6e4f; --ok-soft:#e3f2ec; --c-com:#8b98a5;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#121314; --surface:#1b1c1e; --text:#e8e8e6; --muted:#a0a4a8; --border:#2c2d30;
+    --accent:#ff7a70; --accent-soft:#3a1a18; --code-bg:#0d0e0f; --warn:#f0c060; --warn-soft:#2e2611; --ok:#4cc296; --ok-soft:#16302a;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#121314; --surface:#1b1c1e; --text:#e8e8e6; --muted:#a0a4a8; --border:#2c2d30;
+  --accent:#ff7a70; --accent-soft:#3a1a18; --code-bg:#0d0e0f; --warn:#f0c060; --warn-soft:#2e2611; --ok:#4cc296; --ok-soft:#16302a;
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{margin:0;background:var(--bg);color:var(--text);font:16px/1.65 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+.wrap{max-width:880px;margin:0 auto;padding:40px 16px 80px}
+header{border-bottom:1px solid var(--border);padding-bottom:24px;margin-bottom:28px}
+.eyebrow{color:var(--accent);font-weight:600;font-size:.85rem;letter-spacing:.06em;text-transform:uppercase}
+h1{font-size:clamp(1.8rem,4vw,2.4rem);line-height:1.2;margin:.3em 0 .4em}
+.lead{color:var(--muted);font-size:1.05rem;margin:0}
+.toc{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:14px 18px;margin-top:22px}
+.toc strong{font-size:.85rem;color:var(--muted);text-transform:uppercase;letter-spacing:.05em}
+.toc ol{margin:8px 0 0;padding-left:22px;columns:2;column-gap:28px}
+.toc li{break-inside:avoid;font-size:.93rem}
+.toc a{color:var(--text);text-decoration:none}
+.toc a:hover{color:var(--accent)}
+@media (max-width:600px){.toc ol{columns:1}}
+section{margin:48px 0;scroll-margin-top:16px}
+h2{font-size:1.35rem;margin:0 0 12px;display:flex;align-items:center;gap:12px}
+.num{flex:none;min-width:34px;height:34px;padding:0 6px;border-radius:17px;background:var(--accent);color:#fff;display:grid;place-items:center;font-size:.9rem}
+h3{font-size:1.05rem;margin:26px 0 8px}
+p{margin:.6em 0}
+code{font-family:ui-monospace,"Cascadia Code",Consolas,monospace;font-size:.9em}
+:not(pre)>code{background:var(--accent-soft);padding:1px 6px;border-radius:5px;overflow-wrap:anywhere}
+.code{position:relative;margin:12px 0}
+pre{background:var(--code-bg);color:var(--code-text);padding:16px;padding-right:76px;border-radius:10px;overflow-x:auto;margin:0;font-size:.86rem;line-height:1.55}
+pre .c{color:var(--c-com)}
+.copy{position:absolute;top:8px;right:8px;font:600 .75rem system-ui,sans-serif;background:#ffffff1a;color:#e6e6e6;border:1px solid #ffffff33;border-radius:6px;padding:4px 10px;cursor:pointer}
+.copy:hover{background:#ffffff33}
+.out pre{background:var(--surface);color:var(--text);border:1px dashed var(--border)}
+.out::before{content:"saída esperada";display:block;font-size:.72rem;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);margin-bottom:4px}
+.note{border-left:4px solid var(--ok);background:var(--ok-soft);padding:12px 16px;border-radius:0 8px 8px 0;margin:14px 0}
+.warn{border-left-color:var(--warn);background:var(--warn-soft)}
+.note strong{display:block;margin-bottom:2px}
+.check{border:1px solid var(--border);background:var(--surface);border-radius:10px;padding:12px 16px;margin:16px 0}
+.check strong{color:var(--ok)}
+table{width:100%;border-collapse:collapse;margin:12px 0;font-size:.9rem;background:var(--surface);border:1px solid var(--border)}
+th,td{text-align:left;padding:9px 12px;border-bottom:1px solid var(--border);vertical-align:top}
+th{background:var(--accent-soft);font-weight:600}
+tr:last-child td{border-bottom:none}
+.tbl{overflow-x:auto;border-radius:8px}
+ol.steps{padding-left:22px}
+ol.steps li{margin:8px 0}
+.dl{display:inline-block;margin:8px 8px 0 0;background:var(--accent);color:#fff;text-decoration:none;font-weight:600;padding:8px 16px;border-radius:8px}
+.dl:hover{opacity:.9}
+kbd{font-family:ui-monospace,Consolas,monospace;font-size:.82em;border:1px solid var(--border);border-bottom-width:2px;background:var(--surface);border-radius:4px;padding:0 5px}
+footer{margin-top:60px;padding-top:20px;border-top:1px solid var(--border);color:var(--muted);font-size:.85rem}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header>
+  <p style="margin:0 0 14px"><a href="../" style="color:var(--muted);text-decoration:none;font-size:.9rem">← Projeto Integrador</a></p>
+  <div class="eyebrow">Prática 1 · Aula 10 · Amazon Linux 2023</div>
+  <h1>Criando e executando o <code>monitor.sh</code> no Amazon Linux 2023</h1>
+  <p class="lead">Mesmo objetivo do <a href="../lab09/">Lab 09</a>, agora em uma instância EC2 com <strong>Amazon Linux 2023</strong>: escrever um script em Bash que mede CPU, memória e threads de um processo, grava as medições em CSV, gera alertas e calcula um resumo. Como o Amazon Linux 2023 não tem EPEL nem <code>sysbench</code>, a carga agora vem de um programa em C que você mesmo compila.</p>
+  <div class="toc">
+    <strong>Roteiro</strong>
+    <ol>
+      <li><a href="#s0">Antes de começar</a></li>
+      <li><a href="#s1">Acessar a instância</a></li>
+      <li><a href="#s2">Instalar os pacotes</a></li>
+      <li><a href="#s3">Conhecer os comandos</a></li>
+      <li><a href="#s4">Criar a pasta do lab</a></li>
+      <li><a href="#s5">Escrever o script</a></li>
+      <li><a href="#s6">Entender linha a linha</a></li>
+      <li><a href="#s7">Dar permissão e testar</a></li>
+      <li><a href="#s8">Criar o programa de carga</a></li>
+      <li><a href="#s9">Executar o monitor</a></li>
+      <li><a href="#s10">Analisar os resultados</a></li>
+      <li><a href="#s11">Comparar threads × processos</a></li>
+      <li><a href="#s12">Encerrar e limpar</a></li>
+      <li><a href="#ia">Analisar com IA e desfecho</a></li>
+      <li><a href="#s13">Salvar no GitHub</a></li>
+      <li><a href="#s14">Entregar no Drive</a></li>
+      <li><a href="#erros">Erros comuns</a></li>
+      <li><a href="#desafio">Desafio e entrega</a></li>
+      <li><a href="#cola">Cola rápida</a></li>
+    </ol>
+  </div>
+</header>
+
+<!-- 0 -->
+<section id="s0">
+  <h2><span class="num">0</span>Antes de começar</h2>
+
+  <h3>0.1 O que mudou em relação ao Lab 09</h3>
+  <div class="tbl"><table>
+    <tr><th></th><th>Lab 09 (Red Hat)</th><th>Lab 10 (Amazon Linux 2023)</th></tr>
+    <tr><td>Máquina</td><td>Red Hat no laboratório, com interface gráfica</td><td>Instância EC2 na AWS, só terminal</td></tr>
+    <tr><td>Acesso</td><td>Login local</td><td>EC2 Instance Connect (navegador) ou SSH com chave <code>.pem</code>, usuário <code>ec2-user</code></td></tr>
+    <tr><td>Repositório extra</td><td>EPEL</td><td>Não existe e não é necessário</td></tr>
+    <tr><td>Carga com <strong>threads</strong></td><td><code>sysbench</code></td><td><code>carga_threads</code> (compilado de <code>carga.c</code>)</td></tr>
+    <tr><td>Carga com <strong>processos</strong></td><td><code>stress-ng</code></td><td><code>carga_procs</code> (o mesmo <code>carga.c</code>)</td></tr>
+    <tr><td>Planilha e Drive</td><td>LibreOffice e Firefox na própria máquina</td><td>Arquivos trazidos para o seu computador (GitHub ou <code>scp</code>)</td></tr>
+    <tr><td><code>monitor.sh</code></td><td colspan="2">Igual nos dois labs: o script não muda</td></tr>
+  </table></div>
+
+  <h3>0.2 O que você vai construir</h3>
+  <p>Um script que recebe o nome ou o PID de um processo e, a cada intervalo, registra:</p>
+  <div class="tbl"><table>
+    <tr><th>Coluna do CSV</th><th>Significado</th><th>De onde vem</th></tr>
+    <tr><td><code>timestamp</code></td><td>Hora da medição</td><td><code>date +%T</code></td></tr>
+    <tr><td><code>pid</code></td><td>Identificador do processo</td><td><code>pgrep</code> ou argumento</td></tr>
+    <tr><td><code>cpu</code></td><td>% de CPU no último intervalo (100% = 1 núcleo)</td><td><code>top</code></td></tr>
+    <tr><td><code>mem</code></td><td>% da memória física</td><td><code>top</code></td></tr>
+    <tr><td><code>rss_kb</code></td><td>Memória física residente, em KB</td><td><code>ps</code></td></tr>
+    <tr><td><code>threads</code></td><td>Número de threads do processo</td><td><code>ps</code> (campo <code>nlwp</code>)</td></tr>
+    <tr><td><code>estado</code></td><td>R executando, S dormindo, D esperando E/S, Z zumbi…</td><td><code>ps</code> (campo <code>stat</code>)</td></tr>
+  </table></div>
+
+  <h3>0.3 Pré-requisitos</h3>
+  <ul>
+    <li>Uma instância EC2 com <strong>Amazon Linux 2023</strong> ligada (estado <em>Running</em>).</li>
+    <li>De preferência com <strong>2 vCPUs ou mais</strong> (ex.: <code>t3.small</code>, <code>t3.medium</code>). Com 1 vCPU o lab funciona, mas a diferença entre threads e processos fica menos visível.</li>
+    <li>O <em>security group</em> da instância liberando a porta <strong>22 (SSH)</strong>.</li>
+    <li>Se for usar SSH: o arquivo da chave (<code>.pem</code>) baixado ao criar a instância.</li>
+  </ul>
+  <div class="note"><strong>Convenção desta página</strong>Linhas que começam com <code>#</code> dentro dos blocos são comentários e não precisam ser digitadas. Blocos com fundo claro e borda tracejada mostram a <em>saída esperada</em>. Os números de exemplo são de uma instância com 4 vCPUs; os seus podem ser diferentes.</div>
+</section>
+
+<!-- 1 -->
+<section id="s1">
+  <h2><span class="num">1</span>Acessar a instância</h2>
+
+  <h3>1.1 Opção A: EC2 Instance Connect (pelo navegador)</h3>
+  <ol class="steps">
+    <li>No console da AWS, abra <strong>EC2 → Instâncias</strong> e selecione a sua instância.</li>
+    <li>Clique em <strong>Conectar</strong> → aba <strong>EC2 Instance Connect</strong>.</li>
+    <li>Confira o usuário <code>ec2-user</code> e clique em <strong>Conectar</strong>. Um terminal abre em uma nova aba.</li>
+  </ol>
+  <div class="note warn"><strong>Colar no terminal do navegador</strong>No Instance Connect, colar textos longos pode falhar ou embaralhar a indentação. Para os arquivos grandes (<code>monitor.sh</code> e <code>carga.c</code>), prefira baixar com <code>curl</code>, como mostrado nas seções 5 e 8.</div>
+
+  <h3>1.2 Opção B: SSH a partir do seu computador</h3>
+  <p>Pegue o <strong>IP público</strong> da instância no console (coluna <em>Endereço IPv4 público</em>). No terminal do seu computador (Linux, macOS ou PowerShell do Windows):</p>
+  <div class="code"><pre><span class="c"># Linux / macOS: a chave precisa ser legível só por você</span>
+chmod 400 minha-chave.pem
+ssh -i minha-chave.pem ec2-user@IP_PUBLICO</pre></div>
+  <div class="code"><pre><span class="c"># Windows (PowerShell), se aparecer "UNPROTECTED PRIVATE KEY FILE"</span>
+icacls .\minha-chave.pem /inheritance:r /grant:r "$($env:USERNAME):R"
+ssh -i .\minha-chave.pem ec2-user@IP_PUBLICO</pre></div>
+  <p>Na primeira conexão, responda <code>yes</code> para confiar no servidor.</p>
+  <div class="note"><strong>O IP muda</strong>Se a instância for parada e ligada de novo, o IP público muda. Pegue o novo no console antes de conectar.</div>
+
+  <h3>1.3 Confirmar a distribuição e a máquina</h3>
+  <div class="code"><pre>cat /etc/amazon-linux-release     <span class="c"># distro e versão</span>
+uname -r                           <span class="c"># versão do kernel</span>
+nproc                              <span class="c"># quantos núcleos (vCPUs)</span>
+free -h                            <span class="c"># memória total e disponível</span>
+whoami                             <span class="c"># seu usuário</span></pre></div>
+  <div class="out"><pre>Amazon Linux release 2023.x.2026xxxx (Amazon Linux)
+6.1.xxx-xxx.amzn2023.x86_64
+4
+               total        used        free      shared  buff/cache   available
+Mem:           3.8Gi       420Mi       3.0Gi       1.0Mi       410Mi       3.2Gi
+ec2-user</pre></div>
+  <div class="check"><strong>✓ Checkpoint:</strong> anote o número de vCPUs (<code>nproc</code>) e a memória total. Você vai usar os dois para escolher o tamanho da carga e interpretar o %CPU.</div>
+</section>
+
+<!-- 2 -->
+<section id="s2">
+  <h2><span class="num">2</span>Instalar os pacotes</h2>
+
+  <h3>2.1 Tudo vem dos repositórios padrão</h3>
+  <p><code>procps-ng</code> traz <code>top</code>, <code>ps</code>, <code>pgrep</code>, <code>free</code> e <code>vmstat</code>. <code>psmisc</code> traz <code>pstree</code>. <code>gcc</code> compila o programa de carga. <code>git</code> e <code>tar</code> servem para a entrega.</p>
+  <div class="code"><pre>sudo dnf install -y procps-ng psmisc nano gcc git tar</pre></div>
+
+  <h3>2.2 E o sysbench?</h3>
+  <p>No Red Hat, o <code>sysbench</code> vinha do repositório <strong>EPEL</strong>. O Amazon Linux 2023 <strong>não suporta EPEL</strong>, e compilar o sysbench a partir do código-fonte é demorado. Por isso, neste lab você vai compilar um programa curto em C, o <code>carga.c</code> (seção <a href="#s8">8</a>). Ele cumpre os dois papéis:</p>
+  <div class="tbl"><table>
+    <tr><th>Papel no lab</th><th>Lab 09</th><th>Lab 10</th><th>Como funciona</th></tr>
+    <tr><td>Um processo com várias threads</td><td><code>sysbench cpu --threads=4</code></td><td><code>./carga_threads 4 90 256</code></td><td><code>pthread_create</code>: 1 PID, várias threads</td></tr>
+    <tr><td>Vários processos</td><td><code>stress-ng --cpu 2</code></td><td><code>./carga_procs 4 90 256</code></td><td><code>fork</code>: 1 pai + N filhos, cada um com seu PID</td></tr>
+  </table></div>
+  <p>Bônus: lendo o código, você vê na prática a diferença entre criar uma thread e criar um processo, que é o assunto da aula.</p>
+
+  <h3>2.3 Conferir as instalações</h3>
+  <div class="code"><pre>top -v | head -1
+gcc --version | head -1
+python3 --version
+git --version</pre></div>
+  <div class="out"><pre>  procps-ng 3.3.17
+gcc (GCC) 11.x
+Python 3.9.x
+git version 2.x</pre></div>
+  <div class="note"><strong>Opcional: stress-ng</strong>Em algumas versões do Amazon Linux 2023, <code>sudo dnf install -y stress-ng</code> funciona. Se aparecer <code>No match for argument: stress-ng</code>, ignore: o <code>carga_procs</code> substitui.</div>
+</section>
+
+<!-- 3 -->
+<section id="s3">
+  <h2><span class="num">3</span>Conhecer os comandos que o script usa</h2>
+  <p>Antes de automatizar, rode cada comando à mão para entender a saída. Use o seu próprio shell como alvo: o PID dele está na variável <code>$$</code>.</p>
+
+  <h3>3.1 <code>pgrep</code>: achar o PID pelo nome</h3>
+  <div class="code"><pre>pgrep -a bash       <span class="c"># lista PID + comando de todos os "bash"</span>
+pgrep -o bash       <span class="c"># só o mais antigo (-o = oldest)</span>
+echo $$             <span class="c"># PID do seu shell atual</span></pre></div>
+
+  <h3>3.2 <code>top</code> em modo batch: %CPU e %MEM</h3>
+  <div class="code"><pre>top -b -n 1 -p $$</pre></div>
+  <div class="out"><pre>top - 19:10:02 up  0:12,  1 user,  load average: 0.00, 0.01, 0.00
+Tasks:   1 total,   0 running,   1 sleeping,   0 stopped,   0 zombie
+%Cpu(s):  0.3 us,  0.2 sy,  0.0 ni, 99.5 id,  0.0 wa,  0.0 hi,  0.0 si,  0.0 st
+MiB Mem :   3904.2 total,   3012.4 free,    401.7 used,    490.1 buff/cache
+MiB Swap:      0.0 total,      0.0 free,      0.0 used.   3289.3 avail Mem
+
+    PID USER      PR  NI    VIRT    RES    SHR S  %CPU  %MEM     TIME+ COMMAND
+   2345 ec2-user  20   0  222508   4200   3412 S   0.0   0.1   0:00.02 bash</pre></div>
+  <p>As opções: <code>-b</code> = texto puro (sem tela interativa), <code>-n 1</code> = uma atualização, <code>-p</code> = só esse PID. A <strong>última linha</strong> é a do processo; a coluna 9 é <code>%CPU</code> e a 10 é <code>%MEM</code>. Extraia as duas:</p>
+  <div class="code"><pre>top -b -n 1 -p $$ | tail -1 | awk '{print $9, $10}'</pre></div>
+  <div class="out"><pre>0.0 0.1</pre></div>
+  <div class="note"><strong>Repare na linha de Swap</strong>Instâncias EC2 com Amazon Linux 2023 normalmente vêm <strong>sem swap</strong> (0.0 total). Se a memória acabar, o kernel aciona o <em>OOM Killer</em> direto, sem usar o disco. Tenha isso em mente ao escolher o tamanho da carga.</div>
+
+  <h3>3.3 <code>ps</code>: RSS, threads e estado</h3>
+  <div class="code"><pre>ps -p $$ -o pid,comm,rss,nlwp,stat     <span class="c"># com cabeçalho</span>
+ps -p $$ -o rss=,nlwp=,stat=           <span class="c"># o "=" remove o cabeçalho</span></pre></div>
+  <div class="out"><pre>    PID COMMAND           RSS NLWP STAT
+   2345 bash             4200    1 Ss
+ 4200    1 Ss</pre></div>
+  <p><code>rss</code> = memória física em KB · <code>nlwp</code> = <em>number of light-weight processes</em>, ou seja, nº de threads · <code>stat</code> = estado.</p>
+
+  <h3>3.4 <code>kill -0</code>: o processo ainda existe?</h3>
+  <div class="code"><pre>kill -0 $$ &amp;&amp; echo "existe"
+kill -0 999999 2&gt;/dev/null || echo "nao existe"</pre></div>
+  <p>O sinal 0 não faz nada com o processo: só testa se ele existe e se você tem permissão sobre ele.</p>
+
+  <h3>3.5 <code>awk</code>: comparar números com casas decimais</h3>
+  <p>O Bash só compara inteiros; por isso usamos o <code>awk</code> para saber se <code>12.5 &gt; 10</code>:</p>
+  <div class="code"><pre>awk -v c=12.5 -v l=10 'BEGIN{exit !(c&gt;l)}' &amp;&amp; echo "passou do limite"</pre></div>
+
+  <div class="check"><strong>✓ Checkpoint:</strong> você consegue obter, para o PID do seu shell, os valores de %CPU, %MEM, RSS, threads e estado com um comando cada.</div>
+</section>
+
+<!-- 4 -->
+<section id="s4">
+  <h2><span class="num">4</span>Criar a pasta do lab</h2>
+  <div class="code"><pre>mkdir -p ~/lab10
+cd ~/lab10
+pwd                 <span class="c"># deve mostrar /home/ec2-user/lab10</span></pre></div>
+  <div class="note"><strong>Projeto Integrador</strong>Ao final, tudo vai para o repositório da equipe no GitHub (seção <a href="#s13">13</a>). Se o repositório já está clonado na instância, você pode trabalhar direto em <code>&lt;repo&gt;/scripts/</code> em vez de <code>~/lab10</code>.</div>
+</section>
+
+<!-- 5 -->
+<section id="s5">
+  <h2><span class="num">5</span>Escrever o script</h2>
+
+  <h3>5.1 Opção recomendada: baixar com <code>curl</code></h3>
+  <div class="code"><pre>cd ~/lab10
+curl -O https://dcpc-cesar-school.github.io/projeto-integrador3-26.2/lab10/monitor.sh</pre></div>
+  <p>Mesmo baixando, <strong>leia o código</strong> abaixo e a explicação da seção <a href="#s6">6</a>. Para abrir o arquivo: <code>nano monitor.sh</code>.</p>
+
+  <h3>5.2 Opção manual: digitar ou colar no nano</h3>
+  <div class="code"><pre>nano monitor.sh</pre></div>
+  <div class="tbl"><table>
+    <tr><th>Ação no nano</th><th>Teclas</th></tr>
+    <tr><td>Colar o código copiado</td><td><kbd>Ctrl</kbd>+<kbd>Shift</kbd>+<kbd>V</kbd> no SSH · <kbd>Ctrl</kbd>+<kbd>V</kbd> ou botão direito no Instance Connect</td></tr>
+    <tr><td>Salvar</td><td><kbd>Ctrl</kbd>+<kbd>O</kbd> e depois <kbd>Enter</kbd> para confirmar o nome</td></tr>
+    <tr><td>Sair</td><td><kbd>Ctrl</kbd>+<kbd>X</kbd> (se pedir para salvar, responda <kbd>Y</kbd> e <kbd>Enter</kbd>)</td></tr>
+    <tr><td>Procurar texto</td><td><kbd>Ctrl</kbd>+<kbd>W</kbd></td></tr>
+    <tr><td>Ir para a linha N</td><td><kbd>Ctrl</kbd>+<kbd>_</kbd> e digite o número</td></tr>
+    <tr><td>Mostrar números de linha</td><td><kbd>Alt</kbd>+<kbd>N</kbd></td></tr>
+  </table></div>
+
+  <h3>5.3 O código</h3>
+  <div class="code"><pre>#!/usr/bin/env bash
+<span class="c"># monitor.sh - mede CPU, memoria e threads de um processo e salva em CSV</span>
+<span class="c"># Uso: ./monitor.sh &lt;PID|nome&gt; [intervalo_s] [amostras] [limite_cpu]</span>
+export LC_ALL=C                      <span class="c"># ponto decimal (evita "12,5" no CSV)</span>
+ALVO=$1; INTERVALO=${2:-1}; AMOSTRAS=${3:-30}; LIMITE=${4:-80}
+[ -z "$ALVO" ] &amp;&amp; { echo "Uso: $0 &lt;PID|nome&gt; [intervalo] [amostras] [limite]"; exit 1; }
+
+<span class="c"># 1) Descobrir o PID</span>
+if [[ "$ALVO" =~ ^[0-9]+$ ]]; then PID=$ALVO; else PID=$(pgrep -o "$ALVO"); fi
+[ -z "$PID" ] &amp;&amp; { echo "Processo '$ALVO' nao encontrado"; exit 1; }
+
+<span class="c"># 2) Preparar o arquivo de saida</span>
+NOME=$(ps -p "$PID" -o comm=)
+ARQ="medicoes_${NOME}_$(date +%Y%m%d_%H%M%S).csv"
+echo "timestamp,pid,cpu,mem,rss_kb,threads,estado" &gt; "$ARQ"
+echo "Monitorando $NOME (PID $PID) -&gt; $ARQ"
+
+<span class="c"># 3) Laco de medicoes</span>
+for ((i=1; i&lt;=AMOSTRAS; i++)); do
+  kill -0 "$PID" 2&gt;/dev/null || { echo "Processo terminou"; break; }
+  read CPU MEM &lt;&lt;&lt; "$(top -b -n 1 -p "$PID" | tail -1 | awk '{print $9, $10}')"
+  read RSS THR EST &lt;&lt;&lt; "$(ps -p "$PID" -o rss=,nlwp=,stat=)"
+  echo "$(date +%T),$PID,$CPU,$MEM,$RSS,$THR,$EST" &gt;&gt; "$ARQ"
+
+  <span class="c"># 4) Gerenciar: alerta se passar do limite</span>
+  if awk -v c="$CPU" -v l="$LIMITE" 'BEGIN{exit !(c&gt;l)}'; then
+    echo "[ALERTA] $(date +%T) CPU=$CPU% &gt; $LIMITE%" | tee -a alertas.log
+  fi
+  sleep "$INTERVALO"
+done
+
+<span class="c"># 5) Resumo estatistico</span>
+echo "--- Resumo ---"
+awk -F, 'NR&gt;1 {c+=$3; m+=$5; n++; if($3&gt;mx) mx=$3; if($6&gt;t) t=$6}
+  END {printf "Amostras: %d\n", n
+       printf "CPU media: %.1f%%  max: %.1f%%\n", c/n, mx
+       printf "RSS medio: %.0f KB\nMax threads: %d\n", m/n, t}' "$ARQ"</pre></div>
+  <a class="dl" href="monitor.sh" download>Baixar monitor.sh</a>
+
+  <h3>5.4 Conferir o arquivo</h3>
+  <div class="code"><pre>wc -l monitor.sh           <span class="c"># ~37 linhas</span>
+head -1 monitor.sh         <span class="c"># deve ser #!/usr/bin/env bash</span>
+grep -c $'\r' monitor.sh   <span class="c"># deve dar 0 (sem quebras de linha do Windows)</span>
+bash -n monitor.sh &amp;&amp; echo "sintaxe OK"</pre></div>
+  <div class="out"><pre>37 monitor.sh
+#!/usr/bin/env bash
+0
+sintaxe OK</pre></div>
+  <p>Se o <code>grep</code> der um número maior que 0, corrija com <code>sed -i 's/\r$//' monitor.sh</code> (veja <a href="#erros">Erros comuns</a>).</p>
+</section>
+
+<!-- 6 -->
+<section id="s6">
+  <h2><span class="num">6</span>Entender o script linha a linha</h2>
+  <div class="tbl"><table>
+    <tr><th>Trecho</th><th>O que faz</th></tr>
+    <tr><td><code>#!/usr/bin/env bash</code></td><td><em>Shebang</em>: diz ao sistema que o arquivo deve ser executado pelo Bash.</td></tr>
+    <tr><td><code>export LC_ALL=C</code></td><td>Força o idioma “C”: números saem com ponto (<code>12.5</code>), não vírgula. Sem isso, o CSV quebra.</td></tr>
+    <tr><td><code>ALVO=$1</code></td><td><code>$1</code>, <code>$2</code>… são os argumentos passados na linha de comando.</td></tr>
+    <tr><td><code>${2:-1}</code></td><td>Usa o 2º argumento; se não foi passado, usa o valor padrão <code>1</code>.</td></tr>
+    <tr><td><code>[ -z "$ALVO" ] &amp;&amp; {…; exit 1; }</code></td><td>Se o alvo está vazio (<code>-z</code>), mostra o uso e sai com código de erro 1.</td></tr>
+    <tr><td><code>[[ "$ALVO" =~ ^[0-9]+$ ]]</code></td><td>Expressão regular: o alvo é só dígitos? Então já é um PID.</td></tr>
+    <tr><td><code>PID=$(pgrep -o "$ALVO")</code></td><td><code>$( … )</code> executa um comando e guarda a saída na variável.</td></tr>
+    <tr><td><code>ps -p "$PID" -o comm=</code></td><td>Nome curto do processo, usado no nome do arquivo.</td></tr>
+    <tr><td><code>date +%Y%m%d_%H%M%S</code></td><td>Data e hora no nome do CSV: cada execução gera um arquivo novo.</td></tr>
+    <tr><td><code>&gt;</code> e <code>&gt;&gt;</code></td><td><code>&gt;</code> cria/sobrescreve (cabeçalho); <code>&gt;&gt;</code> acrescenta no final (cada amostra).</td></tr>
+    <tr><td><code>for ((i=1; i&lt;=AMOSTRAS; i++))</code></td><td>Laço no estilo C: repete <code>AMOSTRAS</code> vezes.</td></tr>
+    <tr><td><code>kill -0 … || { …; break; }</code></td><td>Se o processo morreu, para o laço.</td></tr>
+    <tr><td><code>read CPU MEM &lt;&lt;&lt; "…"</code></td><td><em>Here-string</em>: separa a saída “<code>98.0 1.2</code>” em duas variáveis.</td></tr>
+    <tr><td><code>tee -a alertas.log</code></td><td>Mostra o alerta na tela <em>e</em> acrescenta no arquivo de log.</td></tr>
+    <tr><td><code>sleep "$INTERVALO"</code></td><td>Espera N segundos até a próxima amostra.</td></tr>
+    <tr><td><code>awk -F, 'NR&gt;1 {…} END {…}'</code></td><td>Lê o CSV (separador vírgula), pula o cabeçalho (<code>NR&gt;1</code>), acumula somas e máximos; no <code>END</code> imprime médias.</td></tr>
+  </table></div>
+</section>
+
+<!-- 7 -->
+<section id="s7">
+  <h2><span class="num">7</span>Dar permissão de execução e testar</h2>
+  <div class="code"><pre>ls -l monitor.sh          <span class="c"># antes: -rw-r--r--  (sem "x")</span>
+chmod +x monitor.sh
+ls -l monitor.sh          <span class="c"># depois: -rwxr-xr-x</span></pre></div>
+
+  <h3>7.1 Teste 1: sem argumentos</h3>
+  <div class="code"><pre>./monitor.sh</pre></div>
+  <div class="out"><pre>Uso: ./monitor.sh &lt;PID|nome&gt; [intervalo] [amostras] [limite]</pre></div>
+
+  <h3>7.2 Teste 2: processo inexistente</h3>
+  <div class="code"><pre>./monitor.sh programa_que_nao_existe</pre></div>
+  <div class="out"><pre>Processo 'programa_que_nao_existe' nao encontrado</pre></div>
+
+  <h3>7.3 Teste 3: o seu próprio shell (3 amostras)</h3>
+  <div class="code"><pre>./monitor.sh $$ 1 3</pre></div>
+  <div class="out"><pre>Monitorando bash (PID 2345) -&gt; medicoes_bash_20261112_191500.csv
+--- Resumo ---
+Amostras: 3
+CPU media: 0.0%  max: 0.0%
+RSS medio: 4200 KB
+Max threads: 1</pre></div>
+  <div class="check"><strong>✓ Checkpoint:</strong> os três testes deram a saída esperada e existe um arquivo <code>medicoes_bash_*.csv</code> na pasta (<code>ls</code>).</div>
+</section>
+
+<!-- 8 -->
+<section id="s8">
+  <h2><span class="num">8</span>Criar o programa de carga (substitui o sysbench)</h2>
+  <p>Um shell parado não mostra nada interessante. Precisamos de um programa que ocupe CPU e memória de forma controlada. É isso que o <code>carga.c</code> faz: cada <em>trabalhador</em> fica fazendo contas por N segundos, ocupando um núcleo inteiro.</p>
+
+  <h3>8.1 Baixar o código</h3>
+  <div class="code"><pre>cd ~/lab10
+curl -O https://dcpc-cesar-school.github.io/projeto-integrador3-26.2/lab10/carga.c</pre></div>
+  <a class="dl" href="carga.c" download>Baixar carga.c</a>
+  <div class="code"><pre>/* carga.c - gera carga de CPU e memoria usando THREADS ou PROCESSOS.
+ * Substitui o sysbench (threads) e o stress-ng (processos) no Lab 10.
+ *
+ * Compilar (o mesmo codigo vira dois programas):
+ *   gcc -O2 -pthread -o carga_threads carga.c
+ *   gcc -O2 -pthread -o carga_procs   carga.c
+ * O modo e escolhido pelo nome do programa: se o nome contem "procs",
+ * cria processos filhos (fork); senao, cria threads (pthread_create).
+ *
+ * Uso:  ./carga_threads [n] [segundos] [mb]
+ *       ./carga_procs   [n] [segundos] [mb]
+ * Ex.:  ./carga_threads 4 90 256   -&gt; 1 processo com 4 threads de trabalho
+ *       ./carga_procs   4 90 256   -&gt; 1 processo pai + 4 processos filhos
+ */
+#include &lt;pthread.h&gt;
+#include &lt;stdio.h&gt;
+#include &lt;stdlib.h&gt;
+#include &lt;string.h&gt;
+#include &lt;sys/wait.h&gt;
+#include &lt;time.h&gt;
+#include &lt;unistd.h&gt;
+
+static int segundos = 60;
+
+static void *trabalho(void *arg) {          /* ocupa 1 nucleo ate o tempo acabar */
+    (void)arg;
+    volatile double x = 0;
+    time_t fim = time(NULL) + segundos;
+    while (time(NULL) &lt; fim)
+        for (int i = 1; i &lt; 1000000; i++) x += 1.0 / i;
+    return NULL;
+}
+
+int main(int argc, char *argv[]) {
+    int procs = strstr(argv[0], "procs") != NULL;
+    int n     = argc &gt; 1 ? atoi(argv[1]) : 4;
+    segundos  = argc &gt; 2 ? atoi(argv[2]) : 60;
+    int mb    = argc &gt; 3 ? atoi(argv[3]) : 0;
+    if (n &lt; 1 || segundos &lt; 1 || mb &lt; 0) {
+        fprintf(stderr, "Uso: %s [n&gt;=1] [segundos&gt;=1] [mb&gt;=0]\n", argv[0]);
+        return 1;
+    }
+
+    if (mb &gt; 0) {                            /* aloca e escreve -&gt; aparece no RSS */
+        size_t bytes = (size_t)mb * 1024 * 1024;
+        char *buf = malloc(bytes);
+        if (!buf) { perror("malloc"); return 1; }
+        memset(buf, 1, bytes);
+    }
+    printf("%s: modo=%s n=%d tempo=%ds mem=%dMB pid=%d\n", argv[0],
+           procs ? "processos" : "threads", n, segundos, mb, getpid());
+    fflush(stdout);
+
+    if (procs) {
+        for (int i = 0; i &lt; n; i++)
+            if (fork() == 0) { trabalho(NULL); _exit(0); }
+        while (wait(NULL) &gt; 0) ;             /* o pai so espera os filhos */
+    } else {
+        pthread_t t[n];
+        for (int i = 0; i &lt; n; i++) pthread_create(&amp;t[i], NULL, trabalho, NULL);
+        for (int i = 0; i &lt; n; i++) pthread_join(t[i], NULL);
+    }
+    return 0;
+}</pre></div>
+
+  <h3>8.2 O que observar no código</h3>
+  <div class="tbl"><table>
+    <tr><th>Trecho</th><th>O que faz</th></tr>
+    <tr><td><code>trabalho()</code></td><td>Laço de contas que ocupa um núcleo até o tempo acabar. <code>volatile</code> impede o compilador de “otimizar” e apagar as contas.</td></tr>
+    <tr><td><code>malloc</code> + <code>memset</code></td><td>Reserva <code>mb</code> megabytes <em>e escreve neles</em>. Só a memória escrita vira RSS; memória só reservada aparece apenas no VIRT.</td></tr>
+    <tr><td><code>pthread_create</code> / <code>pthread_join</code></td><td>Cria N threads dentro do <strong>mesmo processo</strong> e espera todas terminarem.</td></tr>
+    <tr><td><code>fork()</code> / <code>wait()</code></td><td>Cria N <strong>processos filhos</strong>, cada um com seu próprio PID. O pai só espera.</td></tr>
+    <tr><td><code>strstr(argv[0], "procs")</code></td><td>Escolhe o modo pelo nome do executável. Assim, cada modo aparece com um nome diferente no <code>top</code> e no CSV.</td></tr>
+  </table></div>
+
+  <h3>8.3 Compilar</h3>
+  <div class="code"><pre>gcc -O2 -pthread -o carga_threads carga.c
+gcc -O2 -pthread -o carga_procs   carga.c
+ls -l carga_*                       <span class="c"># dois executáveis (com "x")</span>
+./carga_threads 2 3                 <span class="c"># teste rápido: 2 threads por 3 s</span></pre></div>
+  <div class="out"><pre>./carga_threads: modo=threads n=2 tempo=3s mem=0MB pid=3102</pre></div>
+  <p><code>-pthread</code> liga a biblioteca de threads; <code>-O2</code> ativa otimizações; <code>-o</code> define o nome do executável.</p>
+
+  <h3>8.4 Subir a carga em segundo plano</h3>
+  <p>Escolha o número de threads igual ao número de vCPUs e uma memória bem abaixo da disponível (<code>free -m</code>). O <code>&amp;</code> no final devolve o terminal:</p>
+  <div class="code"><pre><span class="c"># N threads (= nº de vCPUs) por 90 s, usando 256 MB de RAM</span>
+./carga_threads $(nproc) 90 256 &gt; /dev/null &amp;</pre></div>
+  <div class="out"><pre>[1] 4211</pre></div>
+  <p><code>[1]</code> é o número do <em>job</em> e <code>4211</code> o PID. Confira:</p>
+  <div class="code"><pre>jobs                       <span class="c"># jobs em segundo plano deste terminal</span>
+pgrep -a carga_threads     <span class="c"># PID e linha de comando</span>
+ps -T -p $(pgrep carga_threads)   <span class="c"># uma linha por thread (coluna SPID)</span></pre></div>
+  <div class="note"><strong>Dica: veja as threads ao vivo</strong>Abra um <strong>segundo terminal</strong> (outra aba do Instance Connect ou outra janela de SSH) e rode <code>top -H -p $(pgrep carga_threads)</code>. Cada linha é uma thread. Saia com <kbd>q</kbd>.</div>
+  <div class="note warn"><strong>Cuidado com a memória</strong>A instância não tem swap. Se você pedir mais memória do que existe, o processo morre pelo <em>OOM Killer</em> (confira com <code>sudo dmesg | grep -i oom</code>). Comece com 256 MB.</div>
+</section>
+
+<!-- 9 -->
+<section id="s9">
+  <h2><span class="num">9</span>Executar o monitor</h2>
+  <p>Formato: <code>./monitor.sh &lt;alvo&gt; &lt;intervalo_s&gt; &lt;amostras&gt; &lt;limite_cpu&gt;</code></p>
+  <div class="code"><pre><span class="c"># carga_threads, 1 amostra/s, 30 amostras, alerta acima de 150%</span>
+./monitor.sh carga_threads 1 30 150</pre></div>
+  <div class="out"><pre>Monitorando carga_threads (PID 4211) -&gt; medicoes_carga_threads_20261112_190201.csv
+[ALERTA] 19:02:01 CPU=398.0% &gt; 150%
+[ALERTA] 19:02:02 CPU=397.3% &gt; 150%
+...
+--- Resumo ---
+Amostras: 30
+CPU media: 395.8%  max: 399.0%
+RSS medio: 263400 KB
+Max threads: 5</pre></div>
+  <div class="note"><strong>Por que passa de 100%?</strong>No <code>top</code>, 100% = um núcleo inteiro. Quatro threads em quatro vCPUs somam ~400%. Com 2 vCPUs, o máximo será ~200%.</div>
+  <div class="note"><strong>Por que 5 threads e não 4?</strong>As 4 threads de trabalho + a thread principal (o <code>main</code>, que fica no <code>pthread_join</code> esperando).</div>
+  <div class="note"><strong>Por que o RSS deu ~256 MB?</strong>São os 256 MB escritos pelo <code>memset</code>, mais alguns KB do próprio programa.</div>
+  <p>Experimente variar os parâmetros (suba a carga de novo se ela já tiver terminado):</p>
+  <div class="code"><pre>./monitor.sh carga_threads 2 10 300    <span class="c"># 1 amostra a cada 2 s, limite maior</span>
+./monitor.sh 4211 1 5                  <span class="c"># usando o PID em vez do nome</span></pre></div>
+  <div class="note warn"><strong>Instâncias t2/t3 (burstable)</strong>Essas instâncias usam créditos de CPU. Se os créditos acabarem durante o lab, o %CPU máximo cai com o tempo. Se isso acontecer, anote no relatório: é um efeito real da nuvem, e não um erro do script.</div>
+</section>
+
+<!-- 10 -->
+<section id="s10">
+  <h2><span class="num">10</span>Analisar os resultados</h2>
+  <div class="code"><pre>ls -lh medicoes_*.csv alertas.log      <span class="c"># arquivos gerados</span>
+column -s, -t medicoes_carga_threads_*.csv | head   <span class="c"># CSV em formato de tabela</span>
+wc -l alertas.log                      <span class="c"># quantos alertas</span>
+tail -5 alertas.log                    <span class="c"># últimos alertas</span>
+sort -t, -k3 -nr medicoes_carga_threads_*.csv | head -3   <span class="c"># 3 maiores picos de CPU</span></pre></div>
+  <div class="out"><pre>timestamp  pid   cpu    mem  rss_kb  threads  estado
+19:02:01   4211  398.0  6.6  263400  5        Rl
+19:02:02   4211  397.3  6.6  263400  5        Rl
+19:02:03   4211  399.0  6.6  263400  5        Rl</pre></div>
+  <p>Estado <code>Rl</code>: <strong>R</strong> = executando no instante da leitura, <strong>l</strong> = multi-thread. Veja todos os códigos com <code>man ps</code> → seção <em>PROCESS STATE CODES</em>.</p>
+
+  <h3>10.1 Levar para a planilha</h3>
+  <p>A instância não tem interface gráfica. Traga os arquivos para o seu computador de um destes jeitos:</p>
+  <ul>
+    <li><strong>Pelo GitHub (funciona com Instance Connect):</strong> faça o push da seção <a href="#s13">13</a> e baixe os CSVs pelo navegador, no repositório da equipe.</li>
+    <li><strong>Por <code>scp</code> (se você usa SSH):</strong> no terminal do <em>seu computador</em>:</li>
+  </ul>
+  <div class="code"><pre>scp -i minha-chave.pem "ec2-user@IP_PUBLICO:~/lab10/*.csv" .</pre></div>
+  <p>Depois, abra no Google Sheets (<strong>Arquivo → Importar → Upload</strong>) ou no Excel/LibreOffice e faça um gráfico de linha de <code>cpu</code> × <code>timestamp</code>.</p>
+</section>
+
+<!-- 11 -->
+<section id="s11">
+  <h2><span class="num">11</span>Comparar threads × processos</h2>
+  <p>O <code>carga_threads</code> cria <strong>threads</strong>; o <code>carga_procs</code> cria <strong>processos</strong>. Rode o segundo e monitore:</p>
+  <div class="code"><pre>./carga_procs $(nproc) 90 256 &gt; /dev/null &amp;
+sleep 2
+pstree -p $(pgrep -o carga_procs)      <span class="c"># árvore: 1 pai + N filhos</span>
+ps -T -p $(pgrep -o carga_procs)       <span class="c"># threads do processo pai (só 1)</span>
+./monitor.sh carga_procs 1 20 50</pre></div>
+  <div class="out"><pre>carga_procs(5120)-+-carga_procs(5122)
+                  |-carga_procs(5123)
+                  |-carga_procs(5124)
+                  `-carga_procs(5125)</pre></div>
+  <p>Repare: o monitor mede só o processo <strong>pai</strong> (o mais antigo, por causa do <code>pgrep -o</code>), que quase não usa CPU. O trabalho está nos filhos. Para monitorar um filho, use o PID dele:</p>
+  <div class="code"><pre>./monitor.sh $(pgrep -n carga_procs) 1 10 50    <span class="c"># -n = o mais novo (um filho)</span></pre></div>
+  <div class="note"><strong>Pergunta para discutir</strong>Cada filho também mostra ~256 MB de RSS, mas a memória total da máquina não aumentou N vezes. Por quê? Pesquise <em>copy-on-write</em> no <code>fork</code> e confira com <code>free -m</code>.</div>
+
+  <h3>11.1 Threads em Python</h3>
+  <p>O Python 3 já vem instalado no Amazon Linux 2023:</p>
+  <div class="code"><pre>cat &gt; carga_threads.py &lt;&lt;'EOF'
+import threading, time
+def trabalho():
+    fim = time.time() + 90
+    while time.time() &lt; fim:
+        sum(i*i for i in range(10000))
+for _ in range(4):
+    threading.Thread(target=trabalho).start()
+EOF
+python3 carga_threads.py &amp;
+./monitor.sh python3 1 20 50</pre></div>
+  <p>Você verá 5 threads, mas %CPU perto de 100% (não 400%): o Python executa uma thread por vez por causa do <em>GIL</em>. Compare com o <code>carga_threads</code> em C, que usa todos os núcleos.</p>
+
+  <h3>11.2 Preencha</h3>
+  <div class="tbl"><table>
+    <tr><th></th><th>carga_threads</th><th>carga_procs</th><th>python3</th></tr>
+    <tr><td>Nº de PIDs</td><td></td><td></td><td></td></tr>
+    <tr><td>Nº de threads (nlwp)</td><td></td><td></td><td></td></tr>
+    <tr><td>%CPU máximo</td><td></td><td></td><td></td></tr>
+    <tr><td>RSS médio (KB)</td><td></td><td></td><td></td></tr>
+  </table></div>
+</section>
+
+<!-- 12 -->
+<section id="s12">
+  <h2><span class="num">12</span>Encerrar cargas e limpar</h2>
+  <div class="code"><pre>jobs                       <span class="c"># o que ainda está rodando neste terminal</span>
+kill %1                    <span class="c"># encerra o job 1 (SIGTERM)</span>
+pkill carga_threads        <span class="c"># encerra pelo nome</span>
+pkill carga_procs          <span class="c"># encerra o pai e os filhos (todos têm esse nome)</span>
+pkill -f carga_threads.py  <span class="c"># -f procura na linha de comando inteira</span>
+pgrep -a "carga|python3"   <span class="c"># não deve sobrar nada</span></pre></div>
+  <div class="note warn"><strong>Não apague os resultados</strong>Os arquivos <code>medicoes_*.csv</code> e <code>alertas.log</code> serão usados na próxima seção (análise com IA) e na entrega. Só encerre as cargas.</div>
+  <div class="note"><strong>Custo na AWS</strong>Ao terminar o lab <em>inteiro</em> (depois da entrega), pare a instância no console (<strong>Estado da instância → Interromper</strong>) para não consumir créditos à toa.</div>
+</section>
+
+<!-- IA -->
+<section id="ia">
+  <h2><span class="num">IA</span>Analisar os resultados com IA e fechar o lab</h2>
+  <p>Agora você vai juntar todas as medições em uma planilha de resultados, pedir para uma IA analisar os dados e, no final, escrever o desfecho do laboratório. O resultado vira o <code>relatorio.pdf</code>.</p>
+
+  <h3>Passo 1: juntar as medições em uma planilha de resultados</h3>
+  <p>Cada execução do monitor gerou um CSV. O comando abaixo junta todos em um só arquivo e acrescenta uma coluna com o nome do programa (tirado do nome do arquivo):</p>
+  <div class="code"><pre>cd ~/lab10
+{
+  echo "programa,timestamp,pid,cpu,mem,rss_kb,threads,estado"
+  for f in medicoes_*.csv; do
+    <span class="c"># medicoes_carga_threads_20261112_190201.csv -&gt; carga_threads</span>
+    p=$(echo "$f" | sed -E 's/^medicoes_(.*)_[0-9]{8}_[0-9]{6}\.csv$/\1/')
+    tail -n +2 "$f" | sed "s/^/$p,/"      <span class="c"># pula o cabeçalho e põe o programa na frente</span>
+  done
+} &gt; resultados_lab10.csv
+
+head resultados_lab10.csv
+wc -l resultados_lab10.csv</pre></div>
+  <div class="out"><pre>programa,timestamp,pid,cpu,mem,rss_kb,threads,estado
+carga_procs,19:10:31,5120,0.0,6.6,263500,1,S
+carga_threads,19:02:01,4211,398.0,6.6,263400,5,Rl
+...</pre></div>
+  <p>Traga o arquivo para o seu computador (seção <a href="#s10">10.1</a>) e abra no Google Sheets. Essa é a sua <strong>planilha de resultados</strong>: faça um gráfico de linha de <code>cpu</code> por programa.</p>
+
+  <h3>Passo 2: pedir a análise para uma IA</h3>
+  <p>Abra um assistente de IA no navegador do seu computador (Claude, ChatGPT, Gemini ou outro). Anexe estes três arquivos:</p>
+  <ul>
+    <li><code>resultados_lab10.csv</code>: as medições;</li>
+    <li><code>alertas.log</code>: os alertas disparados;</li>
+    <li><code>ambiente.txt</code>: a máquina onde rodou (seção <a href="#s13">13.8</a>; gere antes se ainda não gerou).</li>
+  </ul>
+  <p>Cole este prompt (ajuste o que estiver entre colchetes):</p>
+  <div class="code"><pre>Você é um analista de desempenho de sistemas Linux. Anexei os resultados de
+um laboratório de monitoramento de processos feito em uma instância EC2 com
+Amazon Linux 2023:
+
+- resultados_lab10.csv: medições de CPU (%), memória (%), RSS (KB), número
+  de threads e estado de cada programa, uma linha por amostra.
+  No top, 100% de CPU equivale a 1 núcleo (vCPU) inteiro.
+- alertas.log: alertas de CPU acima do limite configurado.
+- ambiente.txt: dados da máquina (tipo de instância, vCPUs, memória, kernel).
+
+Programas testados: [carga_threads com N threads e 256 MB (programa em C com
+pthreads), carga_procs com N processos filhos e 256 MB (mesmo programa, com
+fork), python3 com 4 threads].
+
+Quero:
+1. Uma tabela por programa com: nº de amostras, CPU média e máxima, RSS
+   médio e máximo (em MB), nº máximo de threads e estados observados.
+2. Os 5 principais insights, sempre com números. Compare threads x processos
+   e relacione a CPU máxima com o número de vCPUs da instância.
+3. Picos, quedas ou comportamentos estranhos, com o horário em que ocorreram
+   (considere também créditos de CPU de instâncias burstable, se for o caso).
+4. Um resumo dos alertas: quantos, de qual programa e em que intervalo.
+5. Limitações da medição (o que o script não captura).
+
+Responda em português, de forma objetiva, e mostre como calculou cada número.</pre></div>
+  <div class="note warn"><strong>Confira a IA</strong>A IA pode errar contas ou inventar números. Compare pelo menos <strong>dois valores</strong> da tabela dela (por exemplo, CPU média e máximo de threads) com o <em>Resumo</em> que o próprio <code>monitor.sh</code> imprimiu. Se algo não bater, corrija e anote no relatório.</div>
+  <div class="note"><strong>Vá além</strong>Faça pelo menos uma pergunta de acompanhamento, por exemplo: <em>“Por que o python3 com 4 threads não passou de ~100% de CPU, e o carga_threads passou?”</em> ou <em>“Por que o monitor mostrou CPU baixa no pai do carga_procs?”</em></div>
+
+  <h3>Passo 3: escrever o desfecho do lab</h3>
+  <p>Monte o <code>relatorio.pdf</code> (até 2 páginas) no seu computador, em um documento (Google Docs, Word ou LibreOffice Writer), com três partes:</p>
+  <div class="tbl"><table>
+    <tr><th>Parte</th><th>Conteúdo</th></tr>
+    <tr><td>1. Números e gráfico</td><td>A tabela por programa (revisada por você) e o gráfico de CPU da planilha.</td></tr>
+    <tr><td>2. Insights</td><td>Os principais insights da IA <em>com a sua revisão</em>: o que você confirmou, o que corrigiu e o que respondeu na pergunta de acompanhamento.</td></tr>
+    <tr><td>3. Desfecho (escrito por você)</td><td>Um ou dois parágrafos, com suas palavras, explicando o que foi feito no lab: o objetivo, os comandos, o script e o programa de carga que você compilou, o que os resultados mostraram sobre processos, threads, CPU e memória, as dificuldades encontradas (incluindo a migração do Red Hat para o Amazon Linux) e como esse monitor será usado no Projeto Integrador.</td></tr>
+  </table></div>
+  <p>Exporte como PDF (<strong>Arquivo → Fazer download → PDF</strong> no Google Docs).</p>
+  <div class="check"><strong>✓ Checkpoint:</strong> existe <code>resultados_lab10.csv</code> em <code>~/lab10</code>, o <code>relatorio.pdf</code> está no seu computador e o desfecho foi escrito por você, não copiado da IA.</div>
+</section>
+
+<!-- 13 -->
+<section id="s13">
+  <h2><span class="num">13</span>Salvar no GitHub</h2>
+  <p>O script, o programa de carga e os resultados devem ficar no <strong>repositório da equipe</strong> no GitHub. É a partir dele que o monitor vai evoluir nas próximas aulas e entrar no pipeline de CI/CD.</p>
+
+  <h3>13.1 Configurar o Git (uma vez por instância)</h3>
+  <p>O <code>git</code> já foi instalado na seção 2.</p>
+  <div class="code"><pre>git config --global user.name  "Seu Nome"
+git config --global user.email "seu_email@cesar.school"   <span class="c"># o mesmo da conta GitHub</span>
+git config --global init.defaultBranch main
+git config --global core.autocrlf input    <span class="c"># evita o problema de CRLF</span>
+git config --global --list</pre></div>
+
+  <h3>13.2 Autenticar com o GitHub por chave SSH (uma vez por instância)</h3>
+  <p>O GitHub não aceita senha no terminal. A forma mais simples é uma chave SSH <strong>gerada na instância</strong>:</p>
+  <div class="code"><pre>ssh-keygen -t ed25519 -C "seu_email@cesar.school"
+<span class="c"># pressione Enter 3 vezes (local padrão, sem senha — ou defina uma)</span>
+
+cat ~/.ssh/id_ed25519.pub
+<span class="c"># copie a linha inteira que começa com ssh-ed25519</span></pre></div>
+  <ol class="steps">
+    <li>No GitHub: foto do perfil → <strong>Settings</strong> → <strong>SSH and GPG keys</strong> → <strong>New SSH key</strong>.</li>
+    <li>Título: algo como <code>ec2-al2023-lab10</code>. Cole a chave em <em>Key</em> e clique em <strong>Add SSH key</strong>.</li>
+  </ol>
+  <div class="code"><pre>ssh -T git@github.com
+<span class="c"># na 1ª vez, responda "yes" para confiar no servidor</span></pre></div>
+  <div class="out"><pre>Hi seu_usuario! You've successfully authenticated, but GitHub does not provide shell access.</pre></div>
+  <div class="note warn"><strong>Não confunda as chaves</strong>A chave <code>.pem</code> da AWS serve para <em>você entrar na instância</em>. A chave <code>id_ed25519</code> serve para <em>a instância entrar no GitHub</em>. Se a instância for apagada e recriada, gere e cadastre uma chave nova; depois remova a antiga no GitHub.</div>
+
+  <h3>13.3 Obter o repositório da equipe</h3>
+  <p><strong>Uma pessoa da equipe</strong> cria o repositório no GitHub (<strong>New repository</strong>, marque <em>Add a README</em>) e adiciona os colegas em <strong>Settings → Collaborators</strong>. O professor também deve ser adicionado. Se a equipe já criou o repositório no Lab 09, use o mesmo.</p>
+  <p>Depois, <strong>cada integrante</strong> clona na instância (copie o endereço em <strong>Code → SSH</strong>):</p>
+  <div class="code"><pre>cd ~
+git clone git@github.com:EQUIPE_OU_USUARIO/NOME_DO_REPO.git
+cd NOME_DO_REPO
+git status</pre></div>
+
+  <h3>13.4 Organizar os arquivos do lab no repositório</h3>
+  <div class="code"><pre>mkdir -p scripts labs/lab10
+cp ~/lab10/monitor.sh ~/lab10/carga.c scripts/
+cp ~/lab10/medicoes_*.csv ~/lab10/resultados_lab10.csv ~/lab10/alertas.log labs/lab10/
+ls -lR scripts labs</pre></div>
+  <p>Estrutura esperada (ela vai crescer até o fim do projeto):</p>
+  <div class="out"><pre>NOME_DO_REPO/
+├── README.md
+├── scripts/
+│   ├── monitor.sh          ← o script (evolui nas próximas aulas)
+│   └── carga.c             ← gerador de carga (threads e processos)
+└── labs/
+    └── lab10/
+        ├── medicoes_carga_threads_20261112_190201.csv
+        ├── medicoes_carga_procs_20261112_191030.csv
+        ├── medicoes_python3_20261112_191500.csv
+        ├── resultados_lab10.csv
+        ├── alertas.log
+        ├── ambiente.txt
+        └── relatorio.pdf   ← enviado pelo navegador (13.6)</pre></div>
+  <div class="note"><strong>Não suba os executáveis</strong>Os binários <code>carga_threads</code> e <code>carga_procs</code> são gerados pelo <code>gcc</code> e não vão para o repositório. Crie um <code>.gitignore</code>: <code>printf "carga_threads\ncarga_procs\n" &gt;&gt; .gitignore</code>.</div>
+
+  <h3>13.5 Registrar (commit) e enviar (push)</h3>
+  <div class="code"><pre>git status                         <span class="c"># arquivos novos aparecem em vermelho</span>
+git add scripts/ labs/lab10/ .gitignore
+git status                         <span class="c"># agora em verde: prontos para o commit</span>
+git commit -m "Lab 10: monitor.sh no Amazon Linux 2023 com carga.c"
+git push</pre></div>
+  <p>Abra o repositório no navegador e confira se os arquivos estão lá.</p>
+  <div class="note"><strong>A permissão de execução vai junto</strong>O Git guarda o <code>chmod +x</code>. Confira com <code>git ls-files -s scripts/monitor.sh</code>: deve começar com <code>100755</code>. Se aparecer <code>100644</code>: <code>git update-index --chmod=+x scripts/monitor.sh</code>, depois commit e push.</div>
+
+  <h3>13.6 Enviar o relatório pelo navegador</h3>
+  <p>O <code>relatorio.pdf</code> está no seu computador, não na instância. No GitHub, abra a pasta <code>labs/lab10</code> → <strong>Add file → Upload files</strong> → arraste o PDF → <strong>Commit changes</strong>. Depois, na instância, rode <code>git pull</code> para ficar atualizado.</p>
+
+  <h3>13.7 Trabalhando em equipe e README</h3>
+  <div class="code"><pre>git pull                           <span class="c"># SEMPRE antes de começar a trabalhar</span>
+<span class="c"># … editar, testar …</span>
+git add -A
+git commit -m "monitor.sh: alerta de memoria por RSS"
+git push</pre></div>
+  <p>Se o <code>push</code> for recusado porque um colega enviou antes: <code>git pull --rebase</code> e depois <code>git push</code>. Acrescente ao <code>README.md</code> como compilar e usar a carga:</p>
+  <div class="code"><pre>cat &gt;&gt; README.md &lt;&lt;'EOF'
+
+## scripts/carga.c
+Gera carga de CPU e memória com threads ou processos.
+
+    gcc -O2 -pthread -o carga_threads scripts/carga.c
+    gcc -O2 -pthread -o carga_procs   scripts/carga.c
+    ./carga_threads 4 90 256    # 4 threads, 90 s, 256 MB
+    ./carga_procs   4 90 256    # 4 processos filhos
+EOF
+git add README.md &amp;&amp; git commit -m "README: uso do carga.c" &amp;&amp; git push</pre></div>
+
+  <h3>13.8 Registrar o ambiente da coleta (obrigatório)</h3>
+  <p>Os números só fazem sentido sabendo em que máquina foram medidos. Na nuvem, o <strong>tipo da instância</strong> é essencial: ele define vCPUs e memória. O bloco abaixo consulta o serviço de metadados da EC2 (IMDSv2):</p>
+  <div class="code"><pre>cd ~/lab10
+TOKEN=$(curl -s -X PUT "http://169.254.169.254/latest/api/token" \
+        -H "X-aws-ec2-metadata-token-ttl-seconds: 60")
+meta() { curl -s -H "X-aws-ec2-metadata-token: $TOKEN" "http://169.254.169.254/latest/meta-data/$1"; }
+{
+  echo "equipe: NOME_DA_EQUIPE"
+  echo "aluno: $(git config user.name)"
+  echo "data: $(date '+%F %T')"
+  echo "distro: $(cat /etc/amazon-linux-release)"
+  echo "kernel: $(uname -r)"
+  echo "tipo_instancia: $(meta instance-type)"
+  echo "zona: $(meta placement/availability-zone)"
+  echo "vcpus: $(nproc)"
+  echo "memoria_total: $(free -h | awk '/Mem:/{print $2}')"
+} &gt; ambiente.txt
+cat ambiente.txt</pre></div>
+  <div class="out"><pre>equipe: equipe3
+aluno: Maria Silva
+data: 2026-11-12 19:30:12
+distro: Amazon Linux release 2023.x.2026xxxx (Amazon Linux)
+kernel: 6.1.xxx-xxx.amzn2023.x86_64
+tipo_instancia: t3.medium
+zona: us-east-1a
+vcpus: 2
+memoria_total: 3.8Gi</pre></div>
+  <p>Copie para o repositório: <code>cp ~/lab10/ambiente.txt ~/NOME_DO_REPO/labs/lab10/</code> e faça commit/push.</p>
+  <div class="check"><strong>✓ Checkpoint:</strong> o repositório da equipe mostra <code>scripts/monitor.sh</code>, <code>scripts/carga.c</code>, a pasta <code>labs/lab10/</code> com CSVs, log, <code>ambiente.txt</code> e <code>relatorio.pdf</code>, e o README atualizado. Envie o link do repositório na atividade do Classroom.</div>
+</section>
+
+<!-- 14 -->
+<section id="s14">
+  <h2><span class="num">14</span>Entregar uma cópia no Drive</h2>
+  <p>Além do GitHub, envie um pacote com os resultados para a <strong>pasta da turma no Google Drive</strong> (link no Classroom). É por ele que o professor vai comparar os dados de todas as equipes.</p>
+
+  <h3>14.1 Padrão de nome (siga exatamente)</h3>
+  <div class="out"><pre>lab10_&lt;equipe&gt;_&lt;primeironome-sobrenome&gt;.tar.gz
+lab10_&lt;equipe&gt;_&lt;primeironome-sobrenome&gt;_relatorio.pdf
+exemplo: lab10_equipe3_maria-silva.tar.gz e lab10_equipe3_maria-silva_relatorio.pdf</pre></div>
+
+  <h3>14.2 Montar o pacote na instância</h3>
+  <div class="code"><pre>cd ~/lab10
+ls     <span class="c"># confira: monitor.sh, carga.c, medicoes_*.csv, resultados_lab10.csv, alertas.log, ambiente.txt</span>
+
+PACOTE=lab10_equipe3_maria-silva.tar.gz      <span class="c"># ajuste o nome!</span>
+tar -czvf "$PACOTE" monitor.sh carga.c medicoes_*.csv resultados_lab10.csv alertas.log ambiente.txt
+tar -tzvf "$PACOTE"                          <span class="c"># lista o conteúdo para conferir</span></pre></div>
+
+  <h3>14.3 Trazer o pacote para o seu computador</h3>
+  <p><strong>Se você usa SSH:</strong> no terminal do <em>seu computador</em> (não na instância):</p>
+  <div class="code"><pre>scp -i minha-chave.pem "ec2-user@IP_PUBLICO:~/lab10/lab10_*.tar.gz" .</pre></div>
+  <p><strong>Se você usa Instance Connect:</strong> copie o pacote para o repositório (<code>cp ~/lab10/lab10_*.tar.gz ~/NOME_DO_REPO/labs/lab10/</code>), faça commit/push e baixe o arquivo pelo navegador, no GitHub (botão <strong>Download raw file</strong>).</p>
+
+  <h3>14.4 Enviar</h3>
+  <ol class="steps">
+    <li>Abra a pasta da turma no Google Drive (link no Classroom).</li>
+    <li>Entre na subpasta <strong>Lab 10</strong> → arraste o pacote <em>e</em> o relatório, ou use <strong>Novo → Upload de arquivo</strong>.</li>
+    <li>Confira se os nomes seguem o padrão e se o tamanho não é 0 KB.</li>
+  </ol>
+  <div class="check"><strong>✓ Checkpoint final:</strong> (1) link do repositório no Classroom e (2) pacote <code>.tar.gz</code> e relatório <code>.pdf</code> na pasta do Drive.</div>
+</section>
+
+<!-- ERROS -->
+<section id="erros">
+  <h2><span class="num">!</span>Erros comuns</h2>
+  <div class="tbl"><table>
+    <tr><th>Sintoma</th><th>Causa</th><th>Solução</th></tr>
+    <tr><td><code>No match for argument: sysbench</code> ou <code>epel-release</code></td><td>O Amazon Linux 2023 não tem EPEL nem sysbench</td><td>Use o <code>carga_threads</code> (seção <a href="#s8">8</a>)</td></tr>
+    <tr><td><code>ec2-user@…: Permission denied (publickey)</code> ao entrar na instância</td><td>Usuário ou chave <code>.pem</code> errados</td><td>Use <code>ec2-user</code> e a chave escolhida ao criar a instância</td></tr>
+    <tr><td><code>WARNING: UNPROTECTED PRIVATE KEY FILE!</code></td><td>A chave <code>.pem</code> está legível por outros usuários</td><td><code>chmod 400 minha-chave.pem</code> (Linux/macOS) ou o comando <code>icacls</code> da seção <a href="#s1">1.2</a> (Windows)</td></tr>
+    <tr><td><code>Connection timed out</code> no SSH</td><td>Porta 22 fechada no security group ou IP público mudou</td><td>Libere a porta 22 para o seu IP e confira o IP atual no console</td></tr>
+    <tr><td><code>gcc: command not found</code></td><td>Compilador não instalado</td><td><code>sudo dnf install -y gcc</code></td></tr>
+    <tr><td><code>undefined reference to `pthread_create'</code></td><td>Faltou a opção <code>-pthread</code></td><td><code>gcc -O2 -pthread -o carga_threads carga.c</code></td></tr>
+    <tr><td><code>Killed</code> ao rodar a carga</td><td>Memória pedida maior que a disponível (OOM Killer; não há swap)</td><td>Use menos MB (veja <code>free -m</code>); confira com <code>sudo dmesg | grep -i oom</code></td></tr>
+    <tr><td>%CPU cai com o tempo, mesmo com a carga rodando</td><td>Créditos de CPU esgotados em instância t2/t3</td><td>Rodadas mais curtas ou instância maior; registre no relatório</td></tr>
+    <tr><td>Texto colado aparece embaralhado no Instance Connect</td><td>Limitação do terminal no navegador</td><td>Baixe os arquivos com <code>curl -O</code> (seções 5 e 8)</td></tr>
+    <tr><td><code>/usr/bin/env: 'bash\r': No such file or directory</code> ou <code>$'\r': command not found</code></td><td>Arquivo salvo no Windows com quebra de linha CRLF</td><td><code>sed -i 's/\r$//' monitor.sh</code></td></tr>
+    <tr><td><code>Permission denied</code> ao rodar o script</td><td>Faltou permissão de execução</td><td><code>chmod +x monitor.sh</code></td></tr>
+    <tr><td><code>command not found: monitor.sh</code></td><td>Faltou o <code>./</code> antes do nome</td><td><code>./monitor.sh …</code></td></tr>
+    <tr><td><code>Processo 'X' nao encontrado</code></td><td>A carga já terminou ou o nome está diferente</td><td><code>pgrep -a nome</code> e suba a carga de novo</td></tr>
+    <tr><td>Números com vírgula quebrando o CSV</td><td>Sistema em português</td><td>Não remova o <code>export LC_ALL=C</code></td></tr>
+    <tr><td>Monitora o processo errado</td><td><code>pgrep -o</code> pega o mais antigo com aquele nome</td><td>Passe o PID em vez do nome</td></tr>
+    <tr><td><code>division by zero</code> no resumo</td><td>O processo terminou antes da 1ª amostra</td><td>Suba a carga antes ou aumente o tempo (2º argumento da carga)</td></tr>
+    <tr><td><code>git@github.com: Permission denied (publickey)</code></td><td>Chave SSH da instância não cadastrada no GitHub</td><td>Refaça a seção <a href="#s13">13.2</a> e teste com <code>ssh -T git@github.com</code></td></tr>
+    <tr><td><code>Support for password authentication was removed</code></td><td>Clonou pelo endereço HTTPS e tentou usar senha</td><td>Use o endereço SSH: <code>git remote set-url origin git@github.com:EQUIPE/REPO.git</code></td></tr>
+    <tr><td><code>! [rejected] … (fetch first)</code></td><td>Um colega enviou commits antes de você</td><td><code>git pull --rebase</code> e depois <code>git push</code></td></tr>
+    <tr><td><code>Author identity unknown</code></td><td>Git sem nome/e-mail configurados</td><td>Refaça a seção <a href="#s13">13.1</a></td></tr>
+  </table></div>
+</section>
+
+<!-- DESAFIO -->
+<section id="desafio">
+  <h2><span class="num">★</span>Desafio e entrega</h2>
+  <p>Estenda o script para <strong>gerenciar</strong> o processo, não só medir:</p>
+  <ol class="steps">
+    <li><strong>Proteção de memória:</strong> se o RSS passar de N MB, envie <code>kill -15 "$PID"</code> e registre o evento em <code>alertas.log</code>. Teste com <code>./carga_threads 1 120 600</code> e um limite de 500 MB, sempre abaixo da memória livre (<code>free -m</code>). É a versão “controlada” do OOM Killer que o projeto pede.</li>
+    <li><strong>Prioridade:</strong> aplique <code>renice +10 -p "$PID"</code> quando a CPU passar do limite. Confira a coluna <code>NI</code> no <code>top</code>.</li>
+    <li><strong>Contexto do sistema:</strong> acrescente ao CSV o load average de 1 min (<code>cut -d' ' -f1 /proc/loadavg</code>) e a memória disponível (<code>free -m | awk '/Mem:/{print $7}'</code>).</li>
+    <li><strong>Somar os filhos:</strong> faça o monitor somar a CPU do pai e de todos os filhos (dica: <code>pgrep -P "$PID"</code> lista os filhos).</li>
+    <li><strong>Comparação:</strong> preencha a tabela da seção 11.2 e explique as diferenças.</li>
+  </ol>
+  <h3>Entregáveis</h3>
+  <div class="tbl"><table>
+    <tr><th>Arquivo</th><th>Conteúdo</th></tr>
+    <tr><td><code>monitor.sh</code></td><td>Script comentado, com as extensões do desafio</td></tr>
+    <tr><td><code>carga.c</code></td><td>Programa de carga usado nas medições</td></tr>
+    <tr><td><code>medicoes_*.csv</code></td><td>Dados de cada programa monitorado</td></tr>
+    <tr><td><code>alertas.log</code></td><td>Eventos registrados</td></tr>
+    <tr><td><code>resultados_lab10.csv</code></td><td>Planilha de resultados com todas as medições (seção <a href="#ia">IA</a>)</td></tr>
+    <tr><td><code>relatorio.pdf</code></td><td>Números, insights da IA revisados por você e o desfecho do lab (seção <a href="#ia">IA</a>)</td></tr>
+    <tr><td><code>ambiente.txt</code></td><td>Instância onde os dados foram coletados (seção 13.8)</td></tr>
+  </table></div>
+  <p><strong>Onde entregar:</strong> no repositório da equipe no GitHub (seção <a href="#s13">13</a>) <em>e</em> na pasta da turma no Drive (seção <a href="#s14">14</a>).</p>
+  <div class="note"><strong>Ligação com o Projeto Integrador</strong>Coloque o script na pasta <code>scripts/</code> do repositório da sua equipe e use-o para monitorar o processo da <em>sua aplicação</em> (ex.: <code>./monitor.sh java 1 60 100</code>). Na próxima etapa ele evolui para coletar os 3 níveis do painel: hardware/SO, containers e serviços.</div>
+</section>
+
+<!-- COLA -->
+<section id="cola">
+  <h2><span class="num">⌘</span>Cola rápida</h2>
+  <div class="tbl"><table>
+    <tr><th>Objetivo</th><th>Comando</th></tr>
+    <tr><td>Entrar na instância</td><td><code>ssh -i minha-chave.pem ec2-user@IP_PUBLICO</code> · ou Instance Connect no console</td></tr>
+    <tr><td>Instalar / procurar pacote</td><td><code>sudo dnf install -y nome</code> · <code>dnf search nome</code> · <code>dnf provides */comando</code></td></tr>
+    <tr><td>Compilar a carga</td><td><code>gcc -O2 -pthread -o carga_threads carga.c</code> (e <code>-o carga_procs</code>)</td></tr>
+    <tr><td>Subir carga</td><td><code>./carga_threads $(nproc) 90 256 &gt; /dev/null &amp;</code></td></tr>
+    <tr><td>Ver processos ao vivo</td><td><code>top</code> (<kbd>P</kbd> CPU · <kbd>M</kbd> memória · <kbd>1</kbd> núcleos · <kbd>H</kbd> threads · <kbd>q</kbd> sair)</td></tr>
+    <tr><td>Foto em texto</td><td><code>top -b -n 1 -p PID</code></td></tr>
+    <tr><td>Campos específicos</td><td><code>ps -p PID -o pid,comm,%cpu,%mem,rss,nlwp,stat</code></td></tr>
+    <tr><td>Threads de um processo</td><td><code>ps -T -p PID</code> · <code>top -H -p PID</code> · <code>ls /proc/PID/task</code></td></tr>
+    <tr><td>Árvore de processos</td><td><code>pstree -p PID</code> · filhos: <code>pgrep -P PID</code></td></tr>
+    <tr><td>Memória do sistema</td><td><code>free -h</code> · <code>vmstat 1 5</code> · OOM: <code>sudo dmesg | grep -i oom</code></td></tr>
+    <tr><td>Salvar saída</td><td><code>cmd &gt; arq</code> · <code>cmd &gt;&gt; arq</code> · <code>cmd | tee -a arq</code></td></tr>
+    <tr><td>Segundo plano</td><td><code>cmd &amp;</code> · <code>jobs</code> · <code>kill %1</code></td></tr>
+    <tr><td>Encerrar / prioridade</td><td><code>kill -15 PID</code> · <code>pkill nome</code> · <code>renice +10 -p PID</code></td></tr>
+    <tr><td>Copiar da instância</td><td><code>scp -i minha-chave.pem "ec2-user@IP:~/lab10/arquivo" .</code></td></tr>
+    <tr><td>Git no dia a dia</td><td><code>git pull</code> · <code>git add -A</code> · <code>git commit -m "msg"</code> · <code>git push</code></td></tr>
+  </table></div>
+</section>
+
+<footer>Infraestrutura de Software · ADS 2026.2 · CESAR School · Prof. David Cunha</footer>
+</div>
+
+<script>
+document.querySelectorAll('.code').forEach(function(box){
+  if (box.classList.contains('out')) return;
+  var pre = box.querySelector('pre'); if(!pre) return;
+  var b = document.createElement('button');
+  b.className = 'copy'; b.type = 'button'; b.textContent = 'Copiar';
+  b.addEventListener('click', function(){
+    var txt = pre.innerText;
+    var done = function(){ b.textContent = 'Copiado!'; setTimeout(function(){ b.textContent = 'Copiar'; }, 1500); };
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(txt).then(done, function(){ fallback(txt); done(); });
+    } else { fallback(txt); done(); }
+  });
+  box.appendChild(b);
+});
+function fallback(t){
+  var a = document.createElement('textarea'); a.value = t; document.body.appendChild(a);
+  a.select(); try { document.execCommand('copy'); } catch(e){} document.body.removeChild(a);
+}
+</script>
+</body>
+</html>
