@@ -80,6 +80,7 @@ footer{margin-top:60px;padding-top:20px;border-top:1px solid var(--border);color
   <div class="toc">
     <strong>Roteiro</strong>
     <ol>
+      <li><a href="#objetivos">Objetivos e conceitos de SO</a></li>
       <li><a href="#s0">Antes de começar</a></li>
       <li><a href="#s1">Acessar a instância</a></li>
       <li><a href="#s2">Instalar os pacotes</a></li>
@@ -93,15 +94,34 @@ footer{margin-top:60px;padding-top:20px;border-top:1px solid var(--border);color
       <li><a href="#s10">Analisar os resultados</a></li>
       <li><a href="#s11">Comparar threads × processos</a></li>
       <li><a href="#s12">Encerrar e limpar</a></li>
+      <li><a href="#conceitos">Experimentos de SO</a></li>
       <li><a href="#ia">Analisar com IA e desfecho</a></li>
       <li><a href="#s13">Salvar no GitHub</a></li>
       <li><a href="#s14">Entregar no Drive</a></li>
       <li><a href="#erros">Erros comuns</a></li>
-      <li><a href="#desafio">Desafio e entrega</a></li>
+      <li><a href="#desafio">Desafio, entrega e avaliação</a></li>
       <li><a href="#cola">Cola rápida</a></li>
     </ol>
   </div>
 </header>
+
+<!-- OBJETIVOS -->
+<section id="objetivos">
+  <h2><span class="num">SO</span>Objetivos e conceitos de SO avaliados</h2>
+  <p>O <code>monitor.sh</code> é o meio; o objetivo é <strong>entender o que o sistema operacional está fazendo</strong>. Ao final do lab você deve ser capaz de explicar, com evidências tiradas das suas próprias medições, os conceitos abaixo. Eles são cobrados nas perguntas da seção <a href="#conceitos">Experimentos de SO</a>, no relatório e nas avaliações.</p>
+  <div class="tbl"><table>
+    <tr><th>Conceito de SO</th><th>O que você deve saber explicar</th><th>Onde aparece no lab</th><th>Referência</th></tr>
+    <tr><td><strong>Processo e ciclo de vida</strong></td><td>O que é um processo; os estados R, S, D, T e Z; por que um processo fica bloqueado esperando</td><td>3.3, 9, 10, 11</td><td>Tanenbaum cap. 2.1 · Aula 04</td></tr>
+    <tr><td><strong>Threads × processos</strong></td><td>O que threads compartilham (espaço de endereçamento, arquivos) e o que processos filhos não compartilham</td><td>8, 11</td><td>Tanenbaum cap. 2.1–2.2 · Aula 04</td></tr>
+    <tr><td><strong>Chamadas de sistema</strong></td><td>Como o programa pede serviços ao kernel: <code>clone</code>/<code>clone3</code>, <code>fork</code>, <code>wait</code>, sinais com <code>kill</code></td><td>3.4, 8, C1</td><td>Tanenbaum cap. 1.6</td></tr>
+    <tr><td><strong>Escalonamento e multiprocessamento</strong></td><td>Por que o %CPU passa de 100%; relação com o nº de núcleos; load average; prioridade (<code>nice</code>)</td><td>1.3, 9, Q4</td><td>Tanenbaum cap. 2.4</td></tr>
+    <tr><td><strong>Memória virtual</strong></td><td>Diferença entre memória virtual (VIRT) e residente (RSS); pilhas das threads; paginação sob demanda</td><td>8.2, 9, C2</td><td>Tanenbaum cap. 3 · Aula 03</td></tr>
+    <tr><td><strong>Copy-on-write e memória sob pressão</strong></td><td>Por que filhos de um <code>fork</code> não duplicam a memória de verdade; o que faz o OOM Killer</td><td>8.4, 11, C3</td><td>Tanenbaum cap. 3 · Aula 03</td></tr>
+    <tr><td><strong>Concorrência × paralelismo</strong></td><td>Por que mais threads nem sempre usam mais núcleos (GIL do Python)</td><td>11.1</td><td>Tanenbaum cap. 2</td></tr>
+    <tr><td><strong>Interface com o kernel</strong></td><td>De onde <code>top</code> e <code>ps</code> tiram os dados: os arquivos que o kernel publica em <code>/proc</code></td><td>3, Q8</td><td>Tanenbaum cap. 1</td></tr>
+  </table></div>
+  <div class="note"><strong>Regra de ouro das respostas</strong>Toda resposta conceitual precisa de <em>evidência</em>: uma saída de comando, uma linha do CSV ou um trecho do <code>top</code> gerado por você. Resposta sem evidência vale no máximo metade dos pontos.</div>
+</section>
 
 <!-- 0 -->
 <section id="s0">
@@ -185,8 +205,8 @@ ec2-user</pre></div>
   <h2><span class="num">2</span>Instalar os pacotes</h2>
 
   <h3>2.1 Tudo vem dos repositórios padrão</h3>
-  <p><code>procps-ng</code> traz <code>top</code>, <code>ps</code>, <code>pgrep</code>, <code>free</code> e <code>vmstat</code>. <code>psmisc</code> traz <code>pstree</code>. <code>gcc</code> compila o programa de carga. <code>git</code> e <code>tar</code> servem para a entrega.</p>
-  <div class="code"><pre>sudo dnf install -y procps-ng psmisc nano gcc git tar</pre></div>
+  <p><code>procps-ng</code> traz <code>top</code>, <code>ps</code>, <code>pgrep</code>, <code>free</code> e <code>vmstat</code>. <code>psmisc</code> traz <code>pstree</code>. <code>gcc</code> compila o programa de carga. <code>strace</code> mostra as chamadas de sistema (seção C1). <code>git</code> e <code>tar</code> servem para a entrega.</p>
+  <div class="code"><pre>sudo dnf install -y procps-ng psmisc nano gcc git tar strace</pre></div>
 
   <h3>2.2 E o sysbench?</h3>
   <p>No Red Hat, o <code>sysbench</code> vinha do repositório <strong>EPEL</strong>. O Amazon Linux 2023 <strong>não suporta EPEL</strong>, e compilar o sysbench a partir do código-fonte é demorado. Por isso, neste lab você vai compilar um programa curto em C, o <code>carga.c</code> (seção <a href="#s8">8</a>). Ele cumpre os dois papéis:</p>
@@ -524,10 +544,10 @@ wc -l alertas.log                      <span class="c"># quantos alertas</span>
 tail -5 alertas.log                    <span class="c"># últimos alertas</span>
 sort -t, -k3 -nr medicoes_carga_threads_*.csv | head -3   <span class="c"># 3 maiores picos de CPU</span></pre></div>
   <div class="out"><pre>timestamp  pid   cpu    mem  rss_kb  threads  estado
-19:02:01   4211  398.0  6.6  263400  5        Rl
-19:02:02   4211  397.3  6.6  263400  5        Rl
-19:02:03   4211  399.0  6.6  263400  5        Rl</pre></div>
-  <p>Estado <code>Rl</code>: <strong>R</strong> = executando no instante da leitura, <strong>l</strong> = multi-thread. Veja todos os códigos com <code>man ps</code> → seção <em>PROCESS STATE CODES</em>.</p>
+19:02:01   4211  398.0  6.6  263400  5        Sl
+19:02:02   4211  397.3  6.6  263400  5        Sl
+19:02:03   4211  399.0  6.6  263400  5        Sl</pre></div>
+  <p>Estado <code>Sl</code>: <strong>S</strong> = dormindo, <strong>l</strong> = multi-thread. Dormindo com ~400% de CPU? Sim: o <code>ps</code> mostra o estado da <em>thread principal</em>, que está parada no <code>pthread_join</code> esperando as outras; as 4 threads de trabalho estão em <strong>R</strong> (confira com <code>ps -T -o tid,stat,comm -p PID</code>). Veja todos os códigos com <code>man ps</code> → seção <em>PROCESS STATE CODES</em>.</p>
 
   <h3>10.1 Levar para a planilha</h3>
   <p>A instância não tem interface gráfica. Traga os arquivos para o seu computador de um destes jeitos:</p>
@@ -594,6 +614,62 @@ pgrep -a "carga|python3"   <span class="c"># não deve sobrar nada</span></pre><
   <div class="note"><strong>Custo na AWS</strong>Ao terminar o lab <em>inteiro</em> (depois da entrega), pare a instância no console (<strong>Estado da instância → Interromper</strong>) para não consumir créditos à toa.</div>
 </section>
 
+<!-- CONCEITOS -->
+<section id="conceitos">
+  <h2><span class="num">C</span>Experimentos de SO e perguntas obrigatórias</h2>
+  <p>Três experimentos curtos (cerca de 15 minutos no total) que revelam o que o kernel faz por baixo dos números do monitor. Depois deles, responda às perguntas <strong>Q1 a Q8</strong> no relatório.</p>
+
+  <h3>C1 · Chamadas de sistema: como nascem threads e processos</h3>
+  <p>O <code>strace</code> intercepta as chamadas que o programa faz ao kernel. Vamos ver qual chamada cria cada thread e cada processo:</p>
+  <div class="code"><pre>cd ~/lab10
+strace -f -e trace=clone,clone3 ./carga_threads 2 1 2&gt;&amp;1 | grep -o 'flags=[A-Z_|]*' | head -1
+strace -f -e trace=clone,clone3 ./carga_procs   2 1 2&gt;&amp;1 | grep -o 'flags=[A-Z_|]*' | head -1</pre></div>
+  <div class="out"><pre>flags=CLONE_VM|CLONE_FS|CLONE_FILES|CLONE_SIGHAND|CLONE_THREAD|CLONE_SYSVSEM|CLONE_SETTLS|CLONE_PARENT_SETTID|CLONE_CHILD_CLEARTID
+flags=CLONE_CHILD_CLEARTID|CLONE_CHILD_SETTID|SIGCHLD</pre></div>
+  <p>No Linux, <code>pthread_create</code> e <code>fork</code> usam a <strong>mesma família de chamadas</strong> (<code>clone</code>/<code>clone3</code>). O que muda são as <em>flags</em>: <code>CLONE_VM</code> = usar o <strong>mesmo espaço de endereçamento</strong>; <code>CLONE_THREAD</code> = ficar no <strong>mesmo processo</strong> (mesmo PID). Sem essas flags, nasce um processo novo, com a memória copiada sob demanda.</p>
+
+  <h3>C2 · Memória virtual: VIRT × RSS</h3>
+  <div class="code"><pre>./carga_threads 4 60 64 &gt; /dev/null &amp;
+P=$!; sleep 1
+grep -E 'VmSize|VmRSS|Threads' /proc/$P/status
+pkill carga_threads</pre></div>
+  <div class="out"><pre>VmSize:	  101104 kB
+VmRSS:	   67284 kB
+Threads:	5</pre></div>
+  <p><code>VmSize</code> (o VIRT do <code>top</code>) é tudo que o processo <em>reservou</em> no espaço de endereçamento; <code>VmRSS</code> é o que está <em>de fato na RAM</em>. A diferença (~33 MB) vem principalmente das <strong>pilhas das 4 threads</strong>: cada uma reserva 8 MB, mas só usa poucas páginas. O kernel só entrega memória física quando a página é tocada (<strong>paginação sob demanda</strong>).</p>
+
+  <h3>C3 · Copy-on-write no <code>fork</code></h3>
+  <div class="code"><pre>free -m | awk '/Mem:/{print "usada antes:", $3, "MB"}'
+./carga_procs 4 30 256 &gt; /dev/null &amp;
+sleep 2
+ps -o pid,ppid,rss,comm -C carga_procs
+free -m | awk '/Mem:/{print "usada depois:", $3, "MB"}'
+pkill carga_procs</pre></div>
+  <div class="out"><pre>usada antes: 158 MB
+    PID    PPID   RSS COMMAND
+   5120    2345 263860 carga_procs
+   5122    5120 262328 carga_procs
+   5123    5120 262328 carga_procs
+   5124    5120 262328 carga_procs
+   5125    5120 262328 carga_procs
+usada depois: 418 MB</pre></div>
+  <p>Somando o RSS dos 5 processos dá ~1,3 GB, mas a memória usada da máquina subiu só ~260 MB. Depois do <code>fork</code>, pai e filhos <strong>compartilham as mesmas páginas físicas</strong>; o kernel só faz a cópia de uma página quando alguém escreve nela (<strong>copy-on-write</strong>). O RSS conta páginas compartilhadas em cada processo.</p>
+
+  <h3>Perguntas obrigatórias (vão no relatório)</h3>
+  <div class="tbl"><table>
+    <tr><th>#</th><th>Pergunta</th><th>Evidência exigida</th></tr>
+    <tr><td>Q1</td><td><strong>Estados.</strong> O <code>carga_threads</code> aparece como <code>Sl</code> (dormindo) usando ~400% de CPU: como isso é possível? E o processo <em>pai</em> do <code>carga_procs</code>: em que estado fica, o que está esperando e por que quase não usa CPU?</td><td>Linhas do CSV + <code>ps -T -o tid,stat,comm -p PID</code> + <code>ps -o pid,ppid,stat,comm -C carga_procs</code></td></tr>
+    <tr><td>Q2</td><td><strong>Threads × processos.</strong> Quantos PIDs e quantas threads cada carga criou? O que as threads compartilham que os processos filhos não compartilham?</td><td><code>pstree -p</code> e <code>ps -T</code> das duas cargas</td></tr>
+    <tr><td>Q3</td><td><strong>Chamadas de sistema.</strong> Qual chamada criou as threads e qual criou os processos? Quais flags fazem a diferença e o que cada uma significa?</td><td>As duas linhas do experimento C1</td></tr>
+    <tr><td>Q4</td><td><strong>Escalonamento.</strong> Qual foi o %CPU máximo e como ele se relaciona com o <code>nproc</code>? Rode <code>./carga_threads $((2*$(nproc))) 30</code>: o %CPU total mudou? E o de cada thread no <code>top -H</code>? Por quê?</td><td>Resumo do monitor + trecho do <code>top -H</code></td></tr>
+    <tr><td>Q5</td><td><strong>Memória virtual.</strong> Por que o VIRT é maior que o RSS? Quanto da diferença vem das pilhas das threads?</td><td>Saída do experimento C2 com a conta</td></tr>
+    <tr><td>Q6</td><td><strong>Copy-on-write.</strong> Por que a soma dos RSS é muito maior que o aumento real de memória? O que aconteceria se cada filho escrevesse em toda a sua memória?</td><td>Saída do experimento C3</td></tr>
+    <tr><td>Q7</td><td><strong>Concorrência × paralelismo.</strong> Por que o <code>python3</code> com 4 threads ficou perto de 100% e o <code>carga_threads</code> com 4 threads chegou perto de 400% (ou ao máximo de vCPUs)?</td><td>Resumos do monitor das duas execuções</td></tr>
+    <tr><td>Q8</td><td><strong>Interface com o kernel.</strong> De quais arquivos de <code>/proc</code> vêm os dados que o monitor grava? Compare <code>/proc/PID/status</code> com uma linha do seu CSV.</td><td>Saída do <code>grep</code> em <code>/proc/PID/status</code> + linha do CSV</td></tr>
+  </table></div>
+  <div class="note warn"><strong>Pode usar IA para estudar, mas não para inventar evidências</strong>As saídas precisam ser as da <em>sua</em> instância (PIDs, horários e valores diferentes dos exemplos desta página). Respostas iguais às saídas de exemplo serão desconsideradas.</div>
+</section>
+
 <!-- IA -->
 <section id="ia">
   <h2><span class="num">IA</span>Analisar os resultados com IA e fechar o lab</h2>
@@ -615,7 +691,7 @@ head resultados_lab10.csv
 wc -l resultados_lab10.csv</pre></div>
   <div class="out"><pre>programa,timestamp,pid,cpu,mem,rss_kb,threads,estado
 carga_procs,19:10:31,5120,0.0,6.6,263500,1,S
-carga_threads,19:02:01,4211,398.0,6.6,263400,5,Rl
+carga_threads,19:02:01,4211,398.0,6.6,263400,5,Sl
 ...</pre></div>
   <p>Traga o arquivo para o seu computador (seção <a href="#s10">10.1</a>) e abra no Google Sheets. Essa é a sua <strong>planilha de resultados</strong>: faça um gráfico de linha de <code>cpu</code> por programa.</p>
 
@@ -656,12 +732,13 @@ Responda em português, de forma objetiva, e mostre como calculou cada número.<
   <div class="note"><strong>Vá além</strong>Faça pelo menos uma pergunta de acompanhamento, por exemplo: <em>“Por que o python3 com 4 threads não passou de ~100% de CPU, e o carga_threads passou?”</em> ou <em>“Por que o monitor mostrou CPU baixa no pai do carga_procs?”</em></div>
 
   <h3>Passo 3: escrever o desfecho do lab</h3>
-  <p>Monte o <code>relatorio.pdf</code> (até 2 páginas) no seu computador, em um documento (Google Docs, Word ou LibreOffice Writer), com três partes:</p>
+  <p>Monte o <code>relatorio.pdf</code> (até 4 páginas) no seu computador, em um documento (Google Docs, Word ou LibreOffice Writer), com quatro partes:</p>
   <div class="tbl"><table>
     <tr><th>Parte</th><th>Conteúdo</th></tr>
     <tr><td>1. Números e gráfico</td><td>A tabela por programa (revisada por você) e o gráfico de CPU da planilha.</td></tr>
     <tr><td>2. Insights</td><td>Os principais insights da IA <em>com a sua revisão</em>: o que você confirmou, o que corrigiu e o que respondeu na pergunta de acompanhamento.</td></tr>
-    <tr><td>3. Desfecho (escrito por você)</td><td>Um ou dois parágrafos, com suas palavras, explicando o que foi feito no lab: o objetivo, os comandos, o script e o programa de carga que você compilou, o que os resultados mostraram sobre processos, threads, CPU e memória, as dificuldades encontradas (incluindo a migração do Red Hat para o Amazon Linux) e como esse monitor será usado no Projeto Integrador.</td></tr>
+    <tr><td>3. Conceitos de SO</td><td>Respostas às perguntas <a href="#conceitos">Q1 a Q8</a>, cada uma com a evidência exigida.</td></tr>
+    <tr><td>4. Desfecho (escrito por você)</td><td>Um ou dois parágrafos, com suas palavras, explicando o que foi feito no lab: o objetivo, os comandos, o script e o programa de carga que você compilou, o que os resultados mostraram sobre processos, threads, CPU e memória, as dificuldades encontradas (incluindo a migração do Red Hat para o Amazon Linux) e como esse monitor será usado no Projeto Integrador.</td></tr>
   </table></div>
   <p>Exporte como PDF (<strong>Arquivo → Fazer download → PDF</strong> no Google Docs).</p>
   <div class="check"><strong>✓ Checkpoint:</strong> existe <code>resultados_lab10.csv</code> em <code>~/lab10</code>, o <code>relatorio.pdf</code> está no seu computador e o desfecho foi escrito por você, não copiado da IA.</div>
@@ -829,6 +906,7 @@ tar -tzvf "$PACOTE"                          <span class="c"># lista o conteúdo
     <tr><td><code>ec2-user@…: Permission denied (publickey)</code> ao entrar na instância</td><td>Usuário ou chave <code>.pem</code> errados</td><td>Use <code>ec2-user</code> e a chave escolhida ao criar a instância</td></tr>
     <tr><td><code>WARNING: UNPROTECTED PRIVATE KEY FILE!</code></td><td>A chave <code>.pem</code> está legível por outros usuários</td><td><code>chmod 400 minha-chave.pem</code> (Linux/macOS) ou o comando <code>icacls</code> da seção <a href="#s1">1.2</a> (Windows)</td></tr>
     <tr><td><code>Connection timed out</code> no SSH</td><td>Porta 22 fechada no security group ou IP público mudou</td><td>Libere a porta 22 para o seu IP e confira o IP atual no console</td></tr>
+    <tr><td><code>strace: command not found</code></td><td>Pacote não instalado</td><td><code>sudo dnf install -y strace</code></td></tr>
     <tr><td><code>gcc: command not found</code></td><td>Compilador não instalado</td><td><code>sudo dnf install -y gcc</code></td></tr>
     <tr><td><code>undefined reference to `pthread_create'</code></td><td>Faltou a opção <code>-pthread</code></td><td><code>gcc -O2 -pthread -o carga_threads carga.c</code></td></tr>
     <tr><td><code>Killed</code> ao rodar a carga</td><td>Memória pedida maior que a disponível (OOM Killer; não há swap)</td><td>Use menos MB (veja <code>free -m</code>); confira com <code>sudo dmesg | grep -i oom</code></td></tr>
@@ -850,7 +928,7 @@ tar -tzvf "$PACOTE"                          <span class="c"># lista o conteúdo
 
 <!-- DESAFIO -->
 <section id="desafio">
-  <h2><span class="num">★</span>Desafio e entrega</h2>
+  <h2><span class="num">★</span>Desafio, entrega e avaliação</h2>
   <p>Estenda o script para <strong>gerenciar</strong> o processo, não só medir:</p>
   <ol class="steps">
     <li><strong>Proteção de memória:</strong> se o RSS passar de N MB, envie <code>kill -15 "$PID"</code> e registre o evento em <code>alertas.log</code>. Teste com <code>./carga_threads 1 120 600</code> e um limite de 500 MB, sempre abaixo da memória livre (<code>free -m</code>). É a versão “controlada” do OOM Killer que o projeto pede.</li>
@@ -867,8 +945,17 @@ tar -tzvf "$PACOTE"                          <span class="c"># lista o conteúdo
     <tr><td><code>medicoes_*.csv</code></td><td>Dados de cada programa monitorado</td></tr>
     <tr><td><code>alertas.log</code></td><td>Eventos registrados</td></tr>
     <tr><td><code>resultados_lab10.csv</code></td><td>Planilha de resultados com todas as medições (seção <a href="#ia">IA</a>)</td></tr>
-    <tr><td><code>relatorio.pdf</code></td><td>Números, insights da IA revisados por você e o desfecho do lab (seção <a href="#ia">IA</a>)</td></tr>
+    <tr><td><code>relatorio.pdf</code></td><td>Números, insights da IA revisados por você, respostas Q1–Q8 e o desfecho do lab (seções <a href="#conceitos">C</a> e <a href="#ia">IA</a>)</td></tr>
     <tr><td><code>ambiente.txt</code></td><td>Instância onde os dados foram coletados (seção 13.8)</td></tr>
+  </table></div>
+  <h3>Critérios de avaliação</h3>
+  <div class="tbl"><table>
+    <tr><th>Critério</th><th>Peso</th><th>O que é esperado</th></tr>
+    <tr><td><strong>Conceitos de SO</strong></td><td>40%</td><td>Q1–Q8 respondidas com a evidência exigida e explicação correta, usando os termos da disciplina (processo, thread, estado, chamada de sistema, escalonamento, memória virtual, copy-on-write)</td></tr>
+    <tr><td><strong>Funcionamento</strong></td><td>25%</td><td><code>monitor.sh</code> e <code>carga.c</code> compilam e rodam; CSVs coerentes para as três cargas; <code>ambiente.txt</code> preenchido</td></tr>
+    <tr><td><strong>Análise dos dados</strong></td><td>20%</td><td>Tabela e gráfico corretos, revisão crítica da IA (o que confirmou e o que corrigiu) e desfecho escrito pelo aluno</td></tr>
+    <tr><td><strong>Entrega e organização</strong></td><td>15%</td><td>Repositório organizado (<code>scripts/</code>, <code>labs/lab10/</code>, README, sem binários) e pacote no Drive com o nome no padrão</td></tr>
+    <tr><td><em>Bônus</em></td><td>até +10%</td><td>Extensões do desafio funcionando, com evidência no CSV ou no <code>alertas.log</code></td></tr>
   </table></div>
   <p><strong>Onde entregar:</strong> no repositório da equipe no GitHub (seção <a href="#s13">13</a>) <em>e</em> na pasta da turma no Drive (seção <a href="#s14">14</a>).</p>
   <div class="note"><strong>Ligação com o Projeto Integrador</strong>Coloque o script na pasta <code>scripts/</code> do repositório da sua equipe e use-o para monitorar o processo da <em>sua aplicação</em> (ex.: <code>./monitor.sh java 1 60 100</code>). Na próxima etapa ele evolui para coletar os 3 níveis do painel: hardware/SO, containers e serviços.</div>
@@ -892,6 +979,8 @@ tar -tzvf "$PACOTE"                          <span class="c"># lista o conteúdo
     <tr><td>Salvar saída</td><td><code>cmd &gt; arq</code> · <code>cmd &gt;&gt; arq</code> · <code>cmd | tee -a arq</code></td></tr>
     <tr><td>Segundo plano</td><td><code>cmd &amp;</code> · <code>jobs</code> · <code>kill %1</code></td></tr>
     <tr><td>Encerrar / prioridade</td><td><code>kill -15 PID</code> · <code>pkill nome</code> · <code>renice +10 -p PID</code></td></tr>
+    <tr><td>Ver chamadas de sistema</td><td><code>strace -f -e trace=clone,clone3 ./programa</code> · resumo: <code>strace -c ./programa</code></td></tr>
+    <tr><td>Memória de um processo</td><td><code>grep -E 'VmSize|VmRSS|Threads|State' /proc/PID/status</code></td></tr>
     <tr><td>Copiar da instância</td><td><code>scp -i minha-chave.pem "ec2-user@IP:~/lab10/arquivo" .</code></td></tr>
     <tr><td>Git no dia a dia</td><td><code>git pull</code> · <code>git add -A</code> · <code>git commit -m "msg"</code> · <code>git push</code></td></tr>
   </table></div>
