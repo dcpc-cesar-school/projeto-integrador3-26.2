@@ -66,6 +66,15 @@ ol.steps li{margin:8px 0}
 .dl{display:inline-block;margin:8px 8px 0 0;background:var(--accent);color:#fff;text-decoration:none;font-weight:600;padding:8px 16px;border-radius:8px}
 .dl:hover{opacity:.9}
 kbd{font-family:ui-monospace,Consolas,monospace;font-size:.82em;border:1px solid var(--border);border-bottom-width:2px;background:var(--surface);border-radius:4px;padding:0 5px}
+details.fold>summary{list-style:none;cursor:pointer;display:block}
+details.fold>summary::-webkit-details-marker{display:none}
+details.fold>summary h2::after{content:"▸";margin-left:auto;color:var(--muted);font-size:1rem;transition:transform .2s}
+details.fold[open]>summary h2::after{transform:rotate(90deg)}
+details.fold>summary:hover h2{color:var(--accent)}
+.toc>details>summary{list-style:none;cursor:pointer;display:flex;align-items:center;gap:8px}
+.toc>details>summary::-webkit-details-marker{display:none}
+.toc>details>summary::after{content:"▸ mostrar";font-size:.8rem;color:var(--muted)}
+.toc>details[open]>summary::after{content:"▾ ocultar"}
 footer{margin-top:60px;padding-top:20px;border-top:1px solid var(--border);color:var(--muted);font-size:.85rem}
 </style>
 </head>
@@ -78,7 +87,8 @@ footer{margin-top:60px;padding-top:20px;border-top:1px solid var(--border);color
   <h1>Criando e executando o <code>monitor.sh</code> no Amazon Linux 2023</h1>
   <p class="lead">Mesmo objetivo do <a href="../lab09/">Lab 09</a>, agora em uma instância EC2 com <strong>Amazon Linux 2023</strong>: escrever um script em Bash que mede CPU, memória e threads de um processo, grava as medições em CSV, gera alertas e calcula um resumo. Como o Amazon Linux 2023 não tem EPEL nem <code>sysbench</code>, a carga agora vem de um programa em C que você mesmo compila.</p>
   <div class="toc">
-    <strong>Roteiro</strong>
+    <details>
+    <summary><strong>Roteiro</strong></summary>
     <ol>
       <li><a href="#objetivos">Objetivos e conceitos de SO</a></li>
       <li><a href="#s0">Antes de começar</a></li>
@@ -102,12 +112,14 @@ footer{margin-top:60px;padding-top:20px;border-top:1px solid var(--border);color
       <li><a href="#desafio">Desafio, entrega e avaliação</a></li>
       <li><a href="#cola">Cola rápida</a></li>
     </ol>
+    </details>
   </div>
 </header>
 
 <!-- OBJETIVOS -->
 <section id="objetivos">
-  <h2><span class="num">SO</span>Objetivos e conceitos de SO avaliados</h2>
+  <details class="fold">
+  <summary><h2><span class="num">SO</span>Objetivos e conceitos de SO avaliados</h2></summary>
   <p>O <code>monitor.sh</code> é o meio; o objetivo é <strong>entender o que o sistema operacional está fazendo</strong>. Ao final do lab você deve ser capaz de explicar, com evidências tiradas das suas próprias medições, os conceitos abaixo. Eles são cobrados nas perguntas da seção <a href="#conceitos">Experimentos de SO</a>, no relatório e nas avaliações.</p>
   <div class="tbl"><table>
     <tr><th>Conceito de SO</th><th>O que você deve saber explicar</th><th>Onde aparece no lab</th><th>Referência</th></tr>
@@ -121,11 +133,13 @@ footer{margin-top:60px;padding-top:20px;border-top:1px solid var(--border);color
     <tr><td><strong>Interface com o kernel</strong></td><td>De onde <code>top</code> e <code>ps</code> tiram os dados: os arquivos que o kernel publica em <code>/proc</code></td><td>3, Q8</td><td>Tanenbaum cap. 1</td></tr>
   </table></div>
   <div class="note"><strong>Regra de ouro das respostas</strong>Toda resposta conceitual precisa de <em>evidência</em>: uma saída de comando, uma linha do CSV ou um trecho do <code>top</code> gerado por você. Resposta sem evidência vale no máximo metade dos pontos.</div>
+  </details>
 </section>
 
 <!-- 0 -->
 <section id="s0">
-  <h2><span class="num">0</span>Antes de começar</h2>
+  <details class="fold">
+  <summary><h2><span class="num">0</span>Antes de começar</h2></summary>
 
   <h3>0.1 O que mudou em relação ao Lab 09</h3>
   <div class="tbl"><table>
@@ -160,6 +174,7 @@ footer{margin-top:60px;padding-top:20px;border-top:1px solid var(--border);color
     <li>Se for usar SSH: o arquivo da chave (<code>.pem</code>) baixado ao criar a instância.</li>
   </ul>
   <div class="note"><strong>Convenção desta página</strong>Linhas que começam com <code>#</code> dentro dos blocos são comentários e não precisam ser digitadas. Blocos com fundo claro e borda tracejada mostram a <em>saída esperada</em>. Os números de exemplo são de uma instância com 4 vCPUs; os seus podem ser diferentes.</div>
+  </details>
 </section>
 
 <!-- 1 -->
@@ -867,7 +882,8 @@ memoria_total: 3.8Gi</pre></div>
 
 <!-- 14 -->
 <section id="s14">
-  <h2><span class="num">14</span>Entregar uma cópia no Drive</h2>
+  <details class="fold">
+  <summary><h2><span class="num">14</span>Entregar uma cópia no Drive</h2></summary>
   <p>Além do GitHub, envie um pacote com os resultados para a <strong>pasta da turma no Google Drive</strong> (link no Classroom). É por ele que o professor vai comparar os dados de todas as equipes.</p>
 
   <h3>14.1 Padrão de nome (siga exatamente)</h3>
@@ -895,11 +911,13 @@ tar -tzvf "$PACOTE"                          <span class="c"># lista o conteúdo
     <li>Confira se os nomes seguem o padrão e se o tamanho não é 0 KB.</li>
   </ol>
   <div class="check"><strong>✓ Checkpoint final:</strong> (1) link do repositório no Classroom e (2) pacote <code>.tar.gz</code> e relatório <code>.pdf</code> na pasta do Drive.</div>
+  </details>
 </section>
 
 <!-- ERROS -->
 <section id="erros">
-  <h2><span class="num">!</span>Erros comuns</h2>
+  <details class="fold">
+  <summary><h2><span class="num">!</span>Erros comuns</h2></summary>
   <div class="tbl"><table>
     <tr><th>Sintoma</th><th>Causa</th><th>Solução</th></tr>
     <tr><td><code>No match for argument: sysbench</code> ou <code>epel-release</code></td><td>O Amazon Linux 2023 não tem EPEL nem sysbench</td><td>Use o <code>carga_threads</code> (seção <a href="#s8">8</a>)</td></tr>
@@ -924,11 +942,13 @@ tar -tzvf "$PACOTE"                          <span class="c"># lista o conteúdo
     <tr><td><code>! [rejected] … (fetch first)</code></td><td>Um colega enviou commits antes de você</td><td><code>git pull --rebase</code> e depois <code>git push</code></td></tr>
     <tr><td><code>Author identity unknown</code></td><td>Git sem nome/e-mail configurados</td><td>Refaça a seção <a href="#s13">13.1</a></td></tr>
   </table></div>
+  </details>
 </section>
 
 <!-- DESAFIO -->
 <section id="desafio">
-  <h2><span class="num">★</span>Desafio, entrega e avaliação</h2>
+  <details class="fold">
+  <summary><h2><span class="num">★</span>Desafio, entrega e avaliação</h2></summary>
   <p>Estenda o script para <strong>gerenciar</strong> o processo, não só medir:</p>
   <ol class="steps">
     <li><strong>Proteção de memória:</strong> se o RSS passar de N MB, envie <code>kill -15 "$PID"</code> e registre o evento em <code>alertas.log</code>. Teste com <code>./carga_threads 1 120 600</code> e um limite de 500 MB, sempre abaixo da memória livre (<code>free -m</code>). É a versão “controlada” do OOM Killer que o projeto pede.</li>
@@ -959,11 +979,13 @@ tar -tzvf "$PACOTE"                          <span class="c"># lista o conteúdo
   </table></div>
   <p><strong>Onde entregar:</strong> no repositório da equipe no GitHub (seção <a href="#s13">13</a>) <em>e</em> na pasta da turma no Drive (seção <a href="#s14">14</a>).</p>
   <div class="note"><strong>Ligação com o Projeto Integrador</strong>Coloque o script na pasta <code>scripts/</code> do repositório da sua equipe e use-o para monitorar o processo da <em>sua aplicação</em> (ex.: <code>./monitor.sh java 1 60 100</code>). Na próxima etapa ele evolui para coletar os 3 níveis do painel: hardware/SO, containers e serviços.</div>
+  </details>
 </section>
 
 <!-- COLA -->
 <section id="cola">
-  <h2><span class="num">⌘</span>Cola rápida</h2>
+  <details class="fold">
+  <summary><h2><span class="num">⌘</span>Cola rápida</h2></summary>
   <div class="tbl"><table>
     <tr><th>Objetivo</th><th>Comando</th></tr>
     <tr><td>Entrar na instância</td><td><code>ssh -i minha-chave.pem ec2-user@IP_PUBLICO</code> · ou Instance Connect no console</td></tr>
@@ -984,12 +1006,23 @@ tar -tzvf "$PACOTE"                          <span class="c"># lista o conteúdo
     <tr><td>Copiar da instância</td><td><code>scp -i minha-chave.pem "ec2-user@IP:~/lab10/arquivo" .</code></td></tr>
     <tr><td>Git no dia a dia</td><td><code>git pull</code> · <code>git add -A</code> · <code>git commit -m "msg"</code> · <code>git push</code></td></tr>
   </table></div>
+  </details>
 </section>
 
 <footer>Infraestrutura de Software · ADS 2026.2 · CESAR School · Prof. David Cunha</footer>
 </div>
 
 <script>
+function abrirAlvo(){
+  var id = location.hash.slice(1); if(!id) return;
+  var el = document.getElementById(id); if(!el) return;
+  var d = el.closest('details') || el.querySelector('details.fold');
+  if(d && !d.open){ d.open = true; el.scrollIntoView(); }
+}
+window.addEventListener('hashchange', abrirAlvo); abrirAlvo();
+document.querySelectorAll('a[href^="#"]').forEach(function(a){
+  a.addEventListener('click', function(){ setTimeout(abrirAlvo, 0); });
+});
 document.querySelectorAll('.code').forEach(function(box){
   if (box.classList.contains('out')) return;
   var pre = box.querySelector('pre'); if(!pre) return;
